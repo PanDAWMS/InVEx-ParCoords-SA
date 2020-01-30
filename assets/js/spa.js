@@ -30,7 +30,10 @@ function handleFileSelect(evt) {
                     [],
                     [],
                     null,
-                    null);
+                    null,
+					{
+						//debug: true
+					});
 			}
 		});
 		
