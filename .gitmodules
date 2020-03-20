@@ -1,0 +1,4 @@
+[submodule "assets/pc"]
+	path = assets/pc
+	url = https://github.com/PanDAWMS/InVEx-ParCoords-SA.git
+	branch = master
