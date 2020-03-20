@@ -16,27 +16,34 @@ function handleFileSelect(evt) {
 			worker: true,
 			skipEmptyLines: true,
 			complete: function(results) {
-				//console.log(results);
-				theData._papa_raw = results;	
-				//console.log(theData);	  
-				theData._dimNames = theData._papa_raw.data[0].filter((x, i)=> i > 0);
+				theData._papa_raw = results;
+				theData._dimNames = theData._papa_raw.data[0];
 				theData._realData = theData._papa_raw.data.
-										filter((x, i)=> i > 0).
-										map((x)=>[x[0], x.filter((x, i)=> i > 0)]);
-										
+										filter((x, i)=> i > 0);
+					
 				theData._coord = new ParallelCoordinates("ParallelCoordinatesGraph",
                     theData._dimNames,
                     theData._realData,
-                    [],
-                    [],
                     null,
-                    null,
-					{
-						//debug: true
+                    null);
+					
+				d3.select('#color_div').style('display', 'block')
+				.append('select')
+					.attr({'class': 'select',
+							'id': 'color_selector'});
+					
+				$('#color_selector').select2({
+					closeOnSelect: true,
+					data: theData._dimNames.map((d) => {
+						return {id: d, text: d};
+					}),
+					width: '400px'
+				})
+					.on("change.select2", () => {
+						colorchange();
 					});
 			}
 		});
-		
     }
     document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
 }

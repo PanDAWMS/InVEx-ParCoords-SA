@@ -57,12 +57,34 @@
 	<input type="file" id="files" name="file" />
 	<output id="list"></output>
 
+	<br>
+	
+	<div id="color_div" style="display:none">
+	  <input type="checkbox" id="scales" name="scales" onchange="colorchange();"> 
+	  <label for="scales">Color by </label>
+	</div>
+
 	<hr>
 
 	<div id="ParallelCoordinatesGraph"></div>
 
 	<script>
 		var theData = {};
+		
+		function colorchange(){
+			if (theData._coord._color === null &&
+				!document.getElementById('scales').checked) return;
+			
+			theData._coord.options.draw.mode = "cluster";
+			
+			theData._coord.updateData("ParallelCoordinatesGraph",
+                    theData._dimNames,
+                    theData._realData,
+                    (document.getElementById('scales').checked)?
+						$('#color_selector').val():
+						null,
+                    null);
+		}
 
 		// Setup the dnd listeners.
 		var dropZone = document.getElementById('drop_zone');
