@@ -613,6 +613,7 @@ class ParallelCoordinates {
             mark: true,
             dom: 'Blfrtip',
             colReorder: true,
+			stateSave: true,
             buttons: (this.options.draw.parts_visible.table_colvis)?['colvis']:[],
             "search": {"regex": true},
 
