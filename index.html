@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.1.5/css/fixedHeader.dataTables.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.5.1/css/colReorder.dataTables.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.5.6/css/buttons.dataTables.min.css" />
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.9/css/select2.min.css" />
 
 	<link rel="stylesheet" href="assets/css/foundation/foundation.css">
@@ -75,7 +75,10 @@
 			if (theData._coord._color === null &&
 				!document.getElementById('scales').checked) return;
 			
-			theData._coord.options.draw.mode = "cluster";
+			theData._coord.options.draw.mode = 
+				(document.getElementById('scales').checked) ? 
+					"cluster" : 
+					"print";
 			
 			theData._coord.updateData("ParallelCoordinatesGraph",
                     theData._dimNames,
