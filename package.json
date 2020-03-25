@@ -1,6 +1,6 @@
 {
   "name": "@PanDAWMS/invex-parallel-coordinates",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "A graph with parallel coordinates and connected table",
   "main": "index.js",
   "type": "module",
@@ -8,7 +8,7 @@
     "prepare-js": "cat parcoords/js/ParallelCoordinates.js > index.js && echo '\nexport default ParallelCoordinates;' >> index.js",
     "prepare-css": "cat parcoords/css/ParallelCoordinates.css > ParallelCoordinates.css",
     "prepare-assets": "npm run -s prepare-js & npm run -s prepare-css",
-    "submodule-update": "git clone -b master git://github.com/PanDAWMS/InVEx-ParCoords-SA.git parcoords",
+    "submodule-update": "rm -rf parcoords && git clone -b master git://github.com/PanDAWMS/InVEx-ParCoords-SA.git parcoords",
     "install": "npm run -s submodule-update && npm run -s prepare-assets"
   },
   "repository": {
