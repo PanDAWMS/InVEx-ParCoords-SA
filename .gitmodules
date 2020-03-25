@@ -1,0 +1,4 @@
+[submodule "parcoords"]
+	path = parcoords
+	url = https://github.com/PanDAWMS/InVEx-ParCoords-SA.git
+	branch = master
