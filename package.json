@@ -1,5 +1,5 @@
 {
-  "name": "@archv/invex-parallel-coordinates",
+  "name": "@PanDAWMS/invex-parallel-coordinates",
   "version": "1.0.3",
   "description": "A graph with parallel coordinates and connected table",
   "main": "index.js",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/archv/InVEx-ParCoords-SA.git"
+    "url": "git://github.com/PanDAWMS/InVEx-ParCoords-SA.git"
   },
   "keywords": [
     "visualization",
