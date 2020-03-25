@@ -1,1 +1,0 @@
-cat parcoords/js/ParallelCoordinates.js > index.js && echo '\nexport default ParallelCoordinates;' >> index.js && cat parcoords/css/ParallelCoordinates.css > ParallelCoordinates.css
