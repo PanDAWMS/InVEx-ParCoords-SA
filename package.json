@@ -1,7 +1,7 @@
 {
   "name": "@archv/invex-parallel-coordinates",
-  "version": "1.0.2",
-  "description": "a",
+  "version": "1.0.3",
+  "description": "A graph with parallel coordinates and connected table",
   "main": "index.js",
   "type": "module",
   "scripts": {
