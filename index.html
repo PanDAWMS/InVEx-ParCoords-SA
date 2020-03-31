@@ -1,79 +1,84 @@
 <!DOCTYPE html>
 <html class="no-js" lang="en" dir="ltr">
-<head>
-<meta charset="utf-8">
-<meta http-equiv="x-ua-compatible" content="ie=edge">
-<!-- Set the viewport width to device width for mobile -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <!-- Set the viewport width to device width for mobile -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-<title>InVEx</title>
-	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/ju-1.12.1/dt-1.10.20/b-1.6.1/b-colvis-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/r-2.2.3/datatables.min.css"/>
+        <title>InVEx</title>
+        <link rel="stylesheet" type="text/css"
+              href="https://cdn.datatables.net/v/ju-1.12.1/dt-1.10.20/b-1.6.1/b-colvis-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/r-2.2.3/datatables.min.css"/>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato&family=Source+Sans+Pro&display=swap">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.9/css/select2.min.css"/>
 
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato&display=swap" />
+        <link rel="stylesheet" href="assets/css/spa.css">
+        <link rel="stylesheet" href="assets/pc/css/ParallelCoordinates.css">
+    </head>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.9/css/select2.min.css" />
-	<link rel="stylesheet" href="assets/css/dataTables.alphabetSearch.css">
-	
-	<link rel="stylesheet" href="assets/css/spa.css">
-	<link rel="stylesheet" href="assets/pc/css/ParallelCoordinates.css">
-</head>
+    <body>
+        <script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+        <script type="text/javascript"
+                src="https://cdn.datatables.net/v/ju-1.12.1/jq-3.3.1/dt-1.10.20/b-1.6.1/b-colvis-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/r-2.2.3/datatables.min.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+        <script type="text/javascript" src="https://unpkg.com/simple-statistics@6.1.1/dist/simple-statistics.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.19.1/URI.min.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/g/mark.js(jquery.mark.min.js),datatables.mark.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.9/js/select2.full.js"></script>
 
-<body>
-	<script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+        <script type="text/javascript" src="assets/js/papaparse.js"></script>
+        <script type="text/javascript" src="assets/pc/js/ParallelCoordinates.js"></script>
 
-	<script type="text/javascript" src="https://cdn.datatables.net/v/ju-1.12.1/jq-3.3.1/dt-1.10.20/b-1.6.1/b-colvis-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/r-2.2.3/datatables.min.js"></script>
+        <script type="text/javascript" src="assets/js/spa.js"></script>
 
-	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
-	<script type="text/javascript" src="https://unpkg.com/simple-statistics@6.1.1/dist/simple-statistics.min.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.19.1/URI.min.js"></script>
-	<script type="text/javascript" src="https://cdn.jsdelivr.net/g/mark.js(jquery.mark.min.js),datatables.mark.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.9/js/select2.full.js"></script>
+        <div id="first-page">
+            <h1>Parallel Coordinates</h1>
+            <p>To show a set of points in an n-dimensional space, a backdrop is drawn consisting of n parallel lines,
+                typically vertical and equally spaced. A point in n-dimensional space is represented as a polyline with
+                vertices on the parallel axes; the position of the vertex on the i-th axis corresponds to the i-th
+                coordinate of the point. (Just a sample description text)
+                <br><br>
+            <p>
+                <span>More info at GitHub:</span>
+                <a href="https://github.com/PanDAWMS/InVEx-ParCoords-SA">
+                    <img src="assets/images/github-logo.png" alt="GitHub repo link" style="height:25px">
+                </a>
+            </p>
 
-	<script type="text/javascript" src="assets/js/papaparse.js"></script>
-	<script type="text/javascript" src="assets/pc/js/ParallelCoordinates.js"></script>
 
-	<script type="text/javascript" src="assets/js/spa.js"></script>
+            <div id="drop_zone" onclick="document.getElementById('files').click();">
+                Drop files here or click here to choose a file
+                <input type="file" id="files" name="file" style="display:none;"/>
+            </div>
+        </div>
 
-	<div id="first-page">
-		<h1>Parallel Coordinates</h1>
-		<p>To show a set of points in an n-dimensional space, a backdrop is drawn consisting of n parallel lines,
-			typically vertical and equally spaced. A point in n-dimensional space is represented as a polyline with
-			vertices on the parallel axes; the position of the vertex on the i-th axis corresponds to the i-th
-			coordinate of the point. (Just a sample description text)
-		<br><br>
-			More info at GitHub: <a href="https://github.com/PanDAWMS/InVEx-ParCoords-SA/tree/spa">link</a>.
-		</p>
+        <div id="after-load">
+            <div id="header">
+                <h1>Parallel Coordinates</h1>
+                <p>
+                    <a href="https://github.com/PanDAWMS/InVEx-ParCoords-SA">
+                        <img src="assets/images/github-logo.png" alt="GitHub repo link" style="height:30px">
+                    </a>
+                </p>
+            </div>
+            <hr>
+            <div id="contents">
+                <div id="color_div">
+                    <input type="checkbox" id="scales" name="scales" onchange="colorchange();">
+                    <label for="scales">Color by </label>
+                </div>
 
-		<div id="drop_zone" onclick="document.getElementById('files').click();">
-			Drop files here or click here to choose a file
-			<input type="file" id="files" name="file" style="display:none;"/>
-		</div>
-	</div>
+                <div id="ParallelCoordinatesGraph"></div>
+            </div>
+        </div>
 
-	<div id="after-load">
-		<div id="header">
-			<h1>Parallel Coordinates</h1>
-			<p>socials</p>
-		</div>
+        <script>
+            // Setup the dnd listeners.
+            var dropZone = document.getElementById('drop_zone');
+            dropZone.addEventListener('dragover', handleDragOver, false);
+            dropZone.addEventListener('drop', handleFileSelect, false);
 
-		<div id="contents">
-			<div id="color_div">
-			  <input type="checkbox" id="scales" name="scales" onchange="colorchange();">
-			  <label for="scales">Color by </label>
-			</div>
-
-			<div id="ParallelCoordinatesGraph"></div>
-		</div>
-	</div>
-
-	<script>
-		// Setup the dnd listeners.
-		var dropZone = document.getElementById('drop_zone');
-		dropZone.addEventListener('dragover', handleDragOver, false);
-		dropZone.addEventListener('drop', handleFileSelect, false);
-
-		document.getElementById('files').addEventListener('change', handleFileSelect, false);
-	</script>
-
-</body>
+            document.getElementById('files').addEventListener('change', handleFileSelect, false);
+        </script>
+    </body>
 </html>

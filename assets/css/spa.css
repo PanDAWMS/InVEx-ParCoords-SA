@@ -40,12 +40,16 @@ body{
 	left: 25%;
 	max-width: 50%;
 	position: relative;
-	margin-bottom: 75px;
+
 	font-family: 'Lato', sans-serif;
 }
 
-#first-page a{
-	color: lightblue;
+#first-page p span{
+	vertical-align: super;
+}
+
+#first-page p:last-of-type{
+	margin-bottom: 75px;
 }
 
 #drop_zone {
@@ -71,11 +75,23 @@ body{
 	flex-direction: column;
 }
 
+#after-load hr{
+	border: 0;
+	height: 1px;
+	background-image: -webkit-linear-gradient(left, #000046, #8c8b8b, #000046);
+	background-image: -moz-linear-gradient(left, #000046, #8c8b8b, #000046);
+	background-image: -ms-linear-gradient(left, #000046, #8c8b8b, #000046);
+	background-image: -o-linear-gradient(left, #000046, #8c8b8b, #000046);
+	margin-bottom: 25px;
+	margin-top: 3px;
+	width: 80%;
+}
+
 #header{
 	display: flex;
 	justify-content: space-between;
-	left: 15%;
-	max-width: 70%;
+	left: 20%;
+	max-width: 60%;
 	position: relative;
 }
 
@@ -87,6 +103,7 @@ body{
 	text-align: start;
 	font-family: Source Code Pro, monospace;
 	text-shadow: 2px 2px 3px rgba(255,255,255,0.4);
+	margin-bottom: 0px;
 }
 
 #contents{
@@ -108,6 +125,11 @@ body{
 	text-align: start;
 }
 
-#color_div{
+.pc-container .dt-button{
+	padding: revert;
+	margin-right: 5px !important;
+}
 
+.select2-container{
+	font-family: 'Lato', sans-serif;
 }
