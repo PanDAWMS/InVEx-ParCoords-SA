@@ -1,16 +1,113 @@
-body, select {
-	font-family: 'Quicksand', sans-serif !important;
-	font-size: 12px !important;
+html{
+	background: #000046;  /* fallback for old browsers */
+	background: -webkit-linear-gradient(to top, #1CB5E0, #000046);  /* Chrome 10-25, Safari 5.1-6 */
+	background: linear-gradient(to top, #1CB5E0, #000046); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+	height:100%;
+
+	overflow: hidden;
+}
+
+body{
+	height: 100%;
+	margin: 0px;
+}
+
+#first-page{
+	width:100%;
+
+	font-family: Source Code Pro, monospace;
+	color: white;
+	text-align: center;
+
+	text-shadow: 2px 2px 3px rgba(255,255,255,0.1);
+
+	margin: 0;
+	position: absolute;
+	top: 50%;
+	-ms-transform: translateY(-50%);
+	transform: translateY(-50%);
+}
+
+#first-page h1{
+	font-size: 45px;
+	line-height: 48px;
+	margin-bottom: 100px;
+	text-shadow: 2px 2px 3px rgba(255,255,255,0.4);
+}
+
+#first-page p{
+	left: 25%;
+	max-width: 50%;
+	position: relative;
+	margin-bottom: 75px;
+	font-family: 'Lato', sans-serif;
+}
+
+#first-page a{
+	color: lightblue;
 }
 
 #drop_zone {
-	border: 2px dashed #bbb;
+	border: 3px dashed #e6e6e6;
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 	border-radius: 5px;
 	padding: 25px;
 	text-align: center;
-	font: 20pt bold 'Vollkorn';
-	width:400px;
-	color: #bbb;
+	font-family: 'Lato', sans-serif;
+	min-width: 300px;
+	max-width: 60%;
+	margin: auto;
+	color: white;
+}
+
+#after-load{
+	font-family: 'Lato', sans-serif;
+	display: none;
+	color: white;
+	height: 100%;
+	text-align: center;
+	flex-direction: column;
+}
+
+#header{
+	display: flex;
+	justify-content: space-between;
+	left: 15%;
+	max-width: 70%;
+	position: relative;
+}
+
+#header p{
+	text-align: end;
+}
+
+#header h1{
+	text-align: start;
+	font-family: Source Code Pro, monospace;
+	text-shadow: 2px 2px 3px rgba(255,255,255,0.4);
+}
+
+#contents{
+	box-shadow:
+		0 2.8px 2.2px rgba(0, 0, 0, 0.034),
+		0 6.7px 5.3px rgba(0, 0, 0, 0.048),
+		0 12.5px 10px rgba(0, 0, 0, 0.06),
+		0 22.3px 17.9px rgba(0, 0, 0, 0.072),
+		0 41.8px 33.4px rgba(0, 0, 0, 0.086),
+		0 100px 80px rgba(0, 0, 0, 0.12)
+	;
+
+	color: black;
+	margin: 0px 20px 20px 20px;
+	padding: 15px;
+	overflow: auto;
+	background: white;
+	border-radius: 5px;
+	text-align: start;
+}
+
+#color_div{
+
 }

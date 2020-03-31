@@ -7,39 +7,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <title>InVEx</title>
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/ju-1.12.1/dt-1.10.20/b-1.6.1/b-colvis-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/r-2.2.3/datatables.min.css"/>
 
-<!-- Included base CSS Files -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/scroller/2.0.0/css/scroller.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/dataTables.foundation.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.3/css/responsive.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/3.2.6/css/fixedColumns.foundation.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.1.5/css/fixedHeader.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.5.1/css/colReorder.dataTables.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.5.6/css/buttons.dataTables.min.css" />
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato&display=swap" />
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.9/css/select2.min.css" />
-
-	<link rel="stylesheet" href="assets/css/foundation/foundation.css">
-	<link rel="stylesheet" href="assets/css/foundation/foundation-icons/foundation-icons.css">
 	<link rel="stylesheet" href="assets/css/dataTables.alphabetSearch.css">
 	
 	<link rel="stylesheet" href="assets/css/spa.css">
 	<link rel="stylesheet" href="assets/pc/css/ParallelCoordinates.css">
-
 </head>
 
 <body>
-	<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
-	<script type="text/javascript" src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
 	<script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
-	<script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-	<script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/dataTables.foundation.min.js"></script>
-	<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.3/js/dataTables.responsive.min.js"></script>
-	<script type="text/javascript" src="https://cdn.datatables.net/fixedcolumns/3.2.6/js/dataTables.fixedColumns.min.js"></script>
-	<script type="text/javascript" src="https://cdn.datatables.net/fixedheader/3.1.5/js/dataTables.fixedHeader.min.js"></script>
-	<script type="text/javascript" src="https://cdn.datatables.net/colreorder/1.5.1/js/dataTables.colReorder.min.js"></script>
-	<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js"></script>
-	<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.colVis.min.js"></script>
+
+	<script type="text/javascript" src="https://cdn.datatables.net/v/ju-1.12.1/jq-3.3.1/dt-1.10.20/b-1.6.1/b-colvis-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/r-2.2.3/datatables.min.js"></script>
+
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
 	<script type="text/javascript" src="https://unpkg.com/simple-statistics@6.1.1/dist/simple-statistics.min.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.19.1/URI.min.js"></script>
@@ -47,51 +30,43 @@
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.9/js/select2.full.js"></script>
 
 	<script type="text/javascript" src="assets/js/papaparse.js"></script>
-	<script type="text/javascript" src="assets/pc/js/dataTables.alphabetSearch.js"></script>
 	<script type="text/javascript" src="assets/pc/js/ParallelCoordinates.js"></script>
 
 	<script type="text/javascript" src="assets/js/spa.js"></script>
 
+	<div id="first-page">
+		<h1>Parallel Coordinates</h1>
+		<p>To show a set of points in an n-dimensional space, a backdrop is drawn consisting of n parallel lines,
+			typically vertical and equally spaced. A point in n-dimensional space is represented as a polyline with
+			vertices on the parallel axes; the position of the vertex on the i-th axis corresponds to the i-th
+			coordinate of the point. (Just a sample description text)
+		<br><br>
+			More info at GitHub: <a href="https://github.com/PanDAWMS/InVEx-ParCoords-SA/tree/spa">link</a>.
+		</p>
 
-	<div id="drop_zone">Drop files here</div>
-	<input type="file" id="files" name="file" />
-	<output id="list"></output>
-
-	<br>
-	
-	<div id="color_div" style="display:none">
-	  <input type="checkbox" id="scales" name="scales" onchange="colorchange();"> 
-	  <label for="scales">Color by </label>
+		<div id="drop_zone" onclick="document.getElementById('files').click();">
+			Drop files here or click here to choose a file
+			<input type="file" id="files" name="file" style="display:none;"/>
+		</div>
 	</div>
 
-	<hr>
+	<div id="after-load">
+		<div id="header">
+			<h1>Parallel Coordinates</h1>
+			<p>socials</p>
+		</div>
 
-	<div id="ParallelCoordinatesGraph"></div>
+		<div id="contents">
+			<div id="color_div">
+			  <input type="checkbox" id="scales" name="scales" onchange="colorchange();">
+			  <label for="scales">Color by </label>
+			</div>
+
+			<div id="ParallelCoordinatesGraph"></div>
+		</div>
+	</div>
 
 	<script>
-		var theData = {};
-		
-		function colorchange(){
-			if (theData._coord._color === null &&
-				!document.getElementById('scales').checked) return;
-			
-			theData._coord.options.draw.mode = 
-				(document.getElementById('scales').checked) ? 
-					"cluster" : 
-					"print";
-
-			theData._coord.options.skip.dims.mode = "show";
-			theData._coord.options.skip.dims.values = theData._coord._graph_features;
-			
-			theData._coord.updateData("ParallelCoordinatesGraph",
-                    theData._dimNames,
-                    theData._realData,
-                    (document.getElementById('scales').checked)?
-						$('#color_selector').val():
-						null,
-                    null);
-		}
-
 		// Setup the dnd listeners.
 		var dropZone = document.getElementById('drop_zone');
 		dropZone.addEventListener('dragover', handleDragOver, false);

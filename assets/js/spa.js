@@ -1,3 +1,26 @@
+var theData = {};
+
+function colorchange(){
+	if (theData._coord._color === null &&
+		!document.getElementById('scales').checked) return;
+
+	theData._coord.options.draw.mode =
+		(document.getElementById('scales').checked) ?
+			"cluster" :
+			"print";
+
+	theData._coord.options.skip.dims.mode = "show";
+	theData._coord.options.skip.dims.values = theData._coord._graph_features;
+
+	theData._coord.updateData("ParallelCoordinatesGraph",
+			theData._dimNames,
+			theData._realData,
+			(document.getElementById('scales').checked)?
+				$('#color_selector').val():
+				null,
+			null);
+}
+
 function handleFileSelect(evt) {
     evt.stopPropagation();
     evt.preventDefault();
@@ -27,7 +50,7 @@ function handleFileSelect(evt) {
                     null,
                     null);
 					
-				d3.select('#color_div').style('display', 'block')
+				d3.select('#color_div')
 				.append('select')
 					.attr({'class': 'select',
 							'id': 'color_selector'});
@@ -42,10 +65,12 @@ function handleFileSelect(evt) {
 					.on("change.select2", () => {
 						colorchange();
 					});
+
+				d3.select('#first-page').style('display', 'none');
+				d3.select('#after-load').style('display', 'flex');
 			}
 		});
     }
-    document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
 }
 
 function handleDragOver(evt) {
