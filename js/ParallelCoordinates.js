@@ -172,7 +172,8 @@ class ParallelCoordinates {
                 dims: {
                     mode: "show", // Possible values: 'hide', 'show', 'none'
                     values: this._features.slice(0,
-                        (this._features.length >= 5) ? 5 : this._features.length)
+                        (this._features.length >= 5) ? 5 : this._features.length),
+                    strict_naming: true
                 }
             };
         else if (options.hasOwnProperty('skip')) this.options.skip = options.skip;
@@ -211,14 +212,26 @@ class ParallelCoordinates {
                         .attr({'class': 'select',
                                 'id': 's' + this.element_id});
 
+        let has_empty = this.options.skip['dims'].strict_naming ||
+            this.options.skip['dims'].values.some(x => x === "");
+
         // Construct the list with dimentions on graph
         this._graph_features = this._features.filter(elem => {
             let skip = this.options.skip;
 
             if (!('dims' in skip)) return true;
             if (skip['dims'].mode === 'none') return true;
-            if (skip['dims'].mode === 'show' &&
-                (skip['dims'].values.some(x => (x.includes(elem) || elem.includes(x))))) return true;
+            if (skip['dims'].mode === 'show'){
+                if (has_empty && elem === "") return true;
+                    else if (elem === "") return false;
+
+                if (skip['dims'].strict_naming) {
+                    if (skip['dims'].values.some(x => x === elem)) return true;
+                }
+                else if (skip['dims'].values.some(x => (x !== "") && (x.includes(elem) || elem.includes(x))))
+                    return true;
+            }
+
             return skip['dims'].mode === 'hide' &&
                 !skip['dims'].values.some(x => (x.includes(elem) || elem.includes(x)));
         });
