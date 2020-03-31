@@ -204,3 +204,7 @@ mark {
 .ci-table h3{
     font-size: 2.3rem;
 }
+
+.ci-table table{
+    width: min-content;
+}
