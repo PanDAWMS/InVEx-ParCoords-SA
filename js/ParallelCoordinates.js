@@ -325,6 +325,11 @@ class ParallelCoordinates {
 
         this._graph = svg_container.append("svg");
 
+        // Add a tooltip for long names
+        this._tooltip = svg_container.append("div")
+            .attr('class', 'tooltip')
+            .style('opacity', 0);
+
         // A hint on how to use
         if (this.options.draw.parts_visible.hint)
             svg_container
@@ -383,7 +388,7 @@ class ParallelCoordinates {
 
         // Sizes of the graph
         this._margin = { top: 30, right: 10, bottom: 10, left: 10 };
-        this._width = (this._graph_features.length > 7 ? 80 * this._graph_features.length : 600) -
+        this._width = (this._graph_features.length > 4 ? 100 * this._graph_features.length : 400) -
             this._margin.left - this._margin.right;
         this._height = 500 - this._margin.top - this._margin.bottom;
 
@@ -526,8 +531,8 @@ class ParallelCoordinates {
             .data(this._graph_features)
             .enter().append("g")
             .attr("class", "dimension")
-            .attr("transform", function (d) { return "translate(" + _PCobject._x(d) + ")"; });
-            /*.call(d3.behavior.drag()
+            .attr("transform", function (d) { return "translate(" + _PCobject._x(d) + ")"; })
+            .call(d3.behavior.drag()
                 .origin(function (d) { return { x: this._x(d) }; }.bind(this))
                 .on("dragstart", function (d) {
                     this._dragging[d] = this._x(d);
@@ -550,23 +555,56 @@ class ParallelCoordinates {
                         .delay(500)
                         .duration(0)
                         .attr("visibility", null);
-                   // d3.selectAll(".pc-titles-text").attr("y", (x, num) => (i % 2 == 0) ? -9 : -18);
+                }));
 
+        // Function to limit the length of the strings
+        let limit = ((x, width, font) => {
+            let sliced = false;
+            while (getTextWidth(x, font) > width) {
+                x = x.slice(0, -1);
+                sliced = true;
+            }
+            return x + ((sliced) ? '...' : '');
+        });
+        var show_tooltip = (d, width) => {
+            if(!limit(d, width, '\'Oswald script=all rev=1\' 10px sans-serif').endsWith('...')) return;
 
-                    /// TODO: chained append maybe?
-                }));*/
+            //on mouse hover show the tooltip
+            _PCobject._tooltip.transition()
+                .duration(200)
+                .style("opacity", .9);
+            _PCobject._tooltip.html(d)
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY) + "px");
+        };
 
         // Add an axis and titles
         this._g.append("g")
             .attr("class", "axis")
-            .each(function (d) { d3.select(this).call(_PCobject._axis.scale(_PCobject._y[d])); })
+            .each(function (d) {d3.select(this).call(_PCobject._axis.scale(_PCobject._y[d]))})
             .append("text")
                 .style("text-anchor", "middle")
                 .attr({
-                    "y": (x, num) => (num % 2 == 0) ? -9 : -18,
+                    "y": -9,
                     "class": "pc-titles-text"
                 })
-                .text((x) => x);
+                .text((x) => limit(x, 85, '\'Oswald script=all rev=1\' 10px sans-serif'))
+                .on("mouseover", (d) => show_tooltip(d, 85))
+                .on("mouseout", () => _PCobject._tooltip.transition().duration(500).style("opacity", 0));
+
+        // Limit the tick length and show a tooltip on mouse hover
+        d3.selectAll('.tick')[0].forEach((d) =>
+            d3.select(d)
+                .on("mouseover", (e) => show_tooltip(isNaN(e) ? e : numberWithSpaces(e), 72))
+                .on("mouseout", function() {
+                    //on mouse out hide the tooltip
+                    _PCobject._tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                })
+                .select('text')
+                    .text((a) => limit(isNaN(a) ? a : numberWithSpaces(a), 72,
+                        '\'Oswald script=all rev=1\' 10px sans-serif')));
 
         // Add and store a brush for each axis
         this._g.append("g")
@@ -800,7 +838,6 @@ class ParallelCoordinates {
                         // Add 'Cluster # statistics' text
                         this._ci_table_div
                             .append('h3')
-                                .style({'margin-bottom': '10px'})
                                 .text("Cluster " + d3.event.target.innerText + " statistics");
 
                         // Print the stats
@@ -864,7 +901,6 @@ class ParallelCoordinates {
         // Add 'Number of elements: N' text
         this._ci_table_div
             .append('h5')
-            .style({'margin-bottom': '8px'})
             .text('Number of elements: ' + this._ci_cluster_data.length);
 
         // Create the table

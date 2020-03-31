@@ -7,7 +7,6 @@
 }
 
 /* ParCoords main styles */
-
 .pc-container{
     display: flex;
     width: auto;
@@ -23,6 +22,19 @@
 
 .pc-svg-container > .svg{
     overflow: auto;
+}
+
+.pc-svg-container .tooltip {
+    position: absolute;
+    padding: 3px;
+    font: 12px sans-serif;
+    background: #e7e7e7;
+    border: 0px;
+    border-radius: 6px;
+    pointer-events: none;
+    max-width: 200px;
+    word-wrap: anywhere;
+    z-index: 2;
 }
 
 .pc-table-wrapper {
@@ -192,17 +204,23 @@ mark {
     max-width: 100%;
     min-width: 400px;
     margin-right: 0px !important;
+    margin-bottom: 10px;
     white-space: nowrap;
     padding: 10px;
 }
 
-.ci-table h3,h5{
+.ci-table h3, .ci-table h5{
     font-family: 'Oswald script=all rev=1';
     text-shadow: #ddd 1px 1px 0;
 }
 
 .ci-table h3{
     font-size: 2.3rem;
+    margin: 0px 0px 10px 0px;
+}
+
+.ci-table h5{
+    margin: 0px 0px 8px 0px;
 }
 
 .ci-table table{
