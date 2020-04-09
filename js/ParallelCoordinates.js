@@ -267,34 +267,42 @@ class ParallelCoordinates {
                 {
                     this._color = this._values[this._features.findIndex(x => x === clusters)];
 
-                    /* colors: (230, 25, 75), (60, 180, 75), (0, 130, 200),
-                    (245, 130, 48), (145, 30, 180), (70, 240, 240), (240, 50, 230),
-                    (210, 245, 60), (250, 190, 190), (0, 128, 128), (230, 190, 255),
-                    (170, 110, 40), (255, 250, 200), (128, 0, 0), (170, 255, 195),
-                    (128, 128, 0), (255, 215, 180), (0, 0, 128), (255, 225, 25)*/
+                    let clusters_unique = [...new Set(this._color)],
+                        colorscale = d3.scale.category20();
 
-                    let _red = [230, 60, 0, 245, 145, 70, 240, 210, 250, 0, 230, 170, 255, 128, 170, 128, 255, 0, 255, 0],
-                        _green = [25, 180, 130, 130, 30, 240, 50, 245, 190, 128, 190, 110, 250, 0, 255, 128, 215, 0, 225, 128],
-                        _blue = [75, 75, 200, 48, 180, 240, 230, 60, 190, 128, 255, 40, 200, 0, 195, 0, 180, 128, 25, 64],
+                    this._color_scheme = { order: [], min_count: -1, max_count: -1 };
 
-                        clusters_unique = [...new Set(this._color)].sort((a, b) => a - b),
-                        len = clusters_unique.length;
+                    clusters_unique.forEach(x => {
+                        let count = this._color.map(String).count(x);
 
-                    this._color_scheme = {};
+                        this._color_scheme[x] = {
+                            count: count
+                        };
 
-                    for (let i = 0; i < len; i++)
-                        this._color_scheme[clusters_unique[i]] =
-                            {
-                                r: _red[i]/255.,
-                                g: _green[i]/255.,
-                                b: _blue[i]/255.
-                            };
+                        if (!this._color_scheme.hasOwnProperty('min_count')) {
+                            this._color_scheme.min_count = count;
+                            this._color_scheme.max_count = count;
+                        }
+                        else {
+                            this._color_scheme.min_count = Math.min(count, this._color_scheme.min_count);
+                            this._color_scheme.max_count = Math.max(count, this._color_scheme.max_count);
+                        }
+                    });
+
+                    this._color_scheme.order = clusters_unique.sort((a, b) =>
+                        this._color_scheme[b].count - this._color_scheme[a].count);
+
+                    clusters_unique.forEach((x, i) =>
+                        this._color_scheme[x].color = colorscale(i));
+
+                    console.log('tst', this._color_scheme);
+
                 }
         }
 
         // Future datatable cells (w/ color if present)
         this._cells = (this.options.draw['mode'] === "cluster") ?
-            this._ids.map((x, i) => x.concat([rgbToHex(this._color_scheme[this._color[i]])])):
+            this._ids.map((x, i) => x.concat([this._color_scheme[this._color[i]].color])):
             this._ids;
 
         // Options for selectBox
@@ -323,6 +331,7 @@ class ParallelCoordinates {
             svg_container = container.append("div")
                 .attr('class', 'pc-svg-container');
 
+        this._graph_header = svg_container.append("div");
         this._graph = svg_container.append("svg");
 
         // Add a tooltip for long names
@@ -379,7 +388,7 @@ class ParallelCoordinates {
     }
 
     // Function to draw the graph
-    _createGraph() {
+    _createGraph(static_height = null) {
         // A link to this ParCoord object
         var _PCobject = this;
 
@@ -387,15 +396,10 @@ class ParallelCoordinates {
         if (this._svg !== undefined) this._svg.remove();
 
         // Sizes of the graph
-        this._margin = { top: 30, right: 10, bottom: 10, left: 10 };
-        this._width = (this._graph_features.length > 4 ? 100 * this._graph_features.length : 400) -
+        this._margin = { top: 30, right: 10, bottom: 10, left: 45 };
+        this._width = (this._graph_features.length > 5 ? 100 * this._graph_features.length : 600) -
             this._margin.left - this._margin.right;
         this._height = 500 - this._margin.top - this._margin.bottom;
-
-        // Change the SVG size to draw lines on
-        this._graph
-            .attr({"width": this._width + this._margin.left + this._margin.right,
-                "height": this._height + this._margin.top + this._margin.bottom });
 
         // Arrays for x and y data, and brush dragging
         this._x = d3.scale.ordinal().rangePoints([0, this._width], 1);
@@ -407,12 +411,91 @@ class ParallelCoordinates {
         this._line = d3.svg.line().interpolate("monotone");
         this._axis = d3.svg.axis().orient("left");
 
+        if (this._graph_popup !== undefined) this._graph_popup.remove();
+        this._graph_popup = this._graph_header.append("div")
+            .attr('class', 'pc-graph-header')
+            .style('display', 'none');
+
         // Shift the draw space
         this._svg = this._graph.append("g")
             .attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
 
         // Extract the list of dimensions and create a scale for each
         this._x.domain(this._graph_features);
+
+        // Modify the graph height in case of ordinal values
+        this._features_strings_length = [];
+        if (typeof static_height === 'boolean') this._static_height = static_height;
+
+        let popup_shown = false;
+        this._graph_features.forEach(dim => {
+            if (!this._isNumbers(dim)) {
+                let count = [...new Set(this._values[this._features.indexOf(dim)])].length;
+
+                this._features_strings_length.push({
+                    id: dim,
+                    count: count
+                });
+
+                if (count * 18 > 500 - this._margin.top - this._margin.bottom){
+                    if(!this._static_height) {
+                        this._height = Math.max(this._height, count * 18 - this._margin.top - this._margin.bottom);
+
+                        if(!popup_shown){
+                            this._graph_popup
+                                .style('display', '')
+                                .append('p')
+                                    .attr('class', 'pc-closebtn')
+                                    .on('click', () => {this._graph_popup.style('display', 'none')})
+                                    .html('&times;');
+
+                            this._graph_popup
+                                .append('span')
+                                    .attr('class', 'pc-graph-header-text')
+                                    .html('<b>Info.</b> Feature "' + dim + '" has too many unique values, ' +
+                                        'the graph height was automatically increased to be human readable. ');
+                            this._graph_popup
+                                .append('span')
+                                    .attr('class', 'pc-graph-header-text')
+                                    .on('click', () => this._createGraph(true))
+                                    .html(' <u><i>Click here to return to the default height.</i></u>');
+                        }
+                        else
+                            this._graph_popup.select('span')
+                                .html('<b>Info.</b> Multiple features have too many unique ' +
+                                    'values, the graph height was automatically increased to be human readable. ');
+
+                        popup_shown = true;
+                    }
+                    else
+                        if(!popup_shown){
+                            this._graph_popup
+                                .style('display', '')
+                                .append('p')
+                                    .attr('class', 'pc-closebtn')
+                                    .on('click', () => {this._graph_popup.style('display', 'none')})
+                                    .html('&times;');
+
+                            this._graph_popup
+                                .append('span')
+                                    .attr('class', 'pc-graph-header-text')
+                                    .html('<b>Info.</b> One of features has too many unique' +
+                                        ' values, the graph height can increased to be human readable. ');
+
+                            this._graph_popup
+                                .append('span')
+                                    .attr('class', 'pc-graph-header-text')
+                                    .on('click', () => this._createGraph(false))
+                                    .html(' <u><i>Click here to increase the height.</i></u>');
+
+                            popup_shown = true;
+                        }
+                        else this._graph_popup.select('span')
+                            .html('<b>Info.</b> Multiple features have too many unique ' +
+                                'values, the graph height can increased to be human readable. ');
+                }
+            }
+        });
 
         // Make scales for each feature
         this._graph_features.forEach(dim => {
@@ -428,6 +511,11 @@ class ParallelCoordinates {
                 this._ranges[dim] = this._y[dim].domain().map(this._y[dim]);
             }
         });
+
+        // Change the SVG size to draw lines on
+        this._graph
+            .attr({"width": this._width + this._margin.left + this._margin.right,
+                "height": this._height + this._margin.top + this._margin.bottom });
 
         // Array to make brushes
         this._line_data = this._data.map(x =>
@@ -452,7 +540,7 @@ class ParallelCoordinates {
             // Cluster color scheme is applied to the stroke color 
             .attr("stroke", (d, i) => (
                 (this.options.draw['mode'] === "cluster")?
-                    rgbToHex(this._color_scheme[this._color[i]]):
+                    this._color_scheme[this._color[i]].color:
                     "#0082C866")
                 )
             .attr("stroke-opacity", "0.4")
@@ -583,7 +671,6 @@ class ParallelCoordinates {
             .attr("class", "axis")
             .each(function (d) {d3.select(this).call(_PCobject._axis.scale(_PCobject._y[d]))})
             .append("text")
-                .style("text-anchor", "middle")
                 .attr({
                     "y": -9,
                     "class": "pc-titles-text"
@@ -593,18 +680,12 @@ class ParallelCoordinates {
                 .on("mouseout", () => _PCobject._tooltip.transition().duration(500).style("opacity", 0));
 
         // Limit the tick length and show a tooltip on mouse hover
-        d3.selectAll('.tick')[0].forEach((d) =>
-            d3.select(d)
-                .on("mouseover", (e) => show_tooltip(isNaN(e) ? e : numberWithSpaces(e), 72))
-                .on("mouseout", function() {
-                    //on mouse out hide the tooltip
-                    _PCobject._tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                })
-                .select('text')
-                    .text((a) => limit(isNaN(a) ? a : numberWithSpaces(a), 72,
-                        '\'Oswald script=all rev=1\' 10px sans-serif')));
+        d3.selectAll('.tick')
+            .on("mouseover", (e) => show_tooltip(isNaN(e) ? e : numberWithSpaces(e), 70))
+            .on("mouseout", () => _PCobject._tooltip.transition().duration(500).style("opacity", 0))
+            .select('text')
+                .text((a) => limit(isNaN(a) ? a : numberWithSpaces(a), 70,
+                    '\'Oswald script=all rev=1\' 10px sans-serif'));
 
         // Add and store a brush for each axis
         this._g.append("g")
@@ -718,13 +799,14 @@ class ParallelCoordinates {
 
                     _PCobject._datatable.rows(this).nodes().to$().addClass('table-selected-line');
                 }
-                else if (_PCobject._selected_line === _PCobject._tableToParcoords(_PCobject._datatable.row(this).data())) {
-                    let line = _PCobject._foreground[0][_PCobject._selected_line];
-                    $(line).removeClass("bold");
+                else if (_PCobject._selected_line === _PCobject._tableToParcoords(
+                    _PCobject._datatable.row(this).data())) {
+                        let line = _PCobject._foreground[0][_PCobject._selected_line];
+                        $(line).removeClass("bold");
 
-                    _PCobject._selected_line = -1;
-                    _PCobject._datatable.rows(this).nodes().to$().removeClass('table-selected-line');
-                }  
+                        _PCobject._selected_line = -1;
+                        _PCobject._datatable.rows(this).nodes().to$().removeClass('table-selected-line');
+                    }
             });
 
         // Add footer elements
@@ -734,7 +816,8 @@ class ParallelCoordinates {
 
         // Add inputs to those elements
         $('#t' + this.element_id + ' tfoot th').each(function (i, x) {
-            $(this).html('<input type="text" placeholder="Search" id="t' + _PCobject.element_id + 'Input' + i + '"/>');
+            $(this).html('<input type="text" placeholder="Search" id="t' +
+                _PCobject.element_id + 'Input' + i + '"/>');
         });
 
         // Apply the search
@@ -786,48 +869,30 @@ class ParallelCoordinates {
                 .attr({'class': 'ci-button-group',
                         'id': 'ci_buttons_' + this.element_id});
 
-        let cluster_count = d3.keys(this._color_scheme).map(x => this._color.map(String).count(x)),
+        let scheme = this._color_scheme,
             scale = d3.scale.sqrt()
-                .domain([Math.min(...cluster_count), Math.max(...cluster_count)])
-                .range([11, 0]);
+                .domain([scheme.min_count, scheme.max_count])
+                .range([100, 0]);
 
         // Add corresponding buttons to every color
         this._ci_buttons
             .selectAll("a")
-                .data(d3.keys(this._color_scheme))
+                .data(scheme.order)
                 .enter().append('a')
                     .attr({'class': 'ci-button',
-                            'title': (id, i) => "Cluster " + id + ".\nElement count: " + cluster_count[i] + "."})
-                    .style({'background': id => rgbToHex(this._color_scheme[id]),
-                            'box-shadow': (id, i) => 'inset 0px 0px 0px ' + scale(cluster_count[i]) + 'px #fff'})
+                            'title': id => "Cluster " + id + ".\nElement count: " + scheme[id].count + "."})
+                    .style('background', id => 'linear-gradient(90deg, ' + scheme[id].color +
+                        ' ' + (99 - scale(scheme[id].count)) + '%, white ' + (101 - scale(scheme[id].count)) + '%')
                     .text(id => id)
                     .on("click", id => {
                         d3.event.preventDefault();
 
-                        // Change the layout of the menu
-                        // (only if the screen is wide enough)
-                        if (!window.matchMedia("(max-width: 800px)").matches) {
-                            // Make the elements side by side (buttons | table)
-                            this._ci_div.style('display', 'flex');
-
-                            // Make buttons vertical
-                            this._ci_buttons
-                                .style({'flex-direction': 'column',
-                                        'align-items': 'center'});
-
-                            // Calculate the Number Of Columns with buttons
-                            let noc = Math.ceil(Object.keys(this._color_scheme).length / 11);
-
-                            // Fix the div with the buttons a little bit
-                            this._ci_buttons_div
-                                .style('width', (noc * 46) + 'px')
-                                .select('label')
-                                    .style('text-align', 'center');
-                        }
+                        // Apply the activated class
+                        this._ci_buttons_div.attr('class', 'ci-buttons-active');
 
                         // Clean all children
                         this._ci_table_div
-                            .style('border', "5px dashed " + rgbToHex(this._color_scheme[id]) + "33")
+                            .style('border', "5px dashed " + this._color_scheme[id].color + "33")
                             .attr('class', 'ci-table pc-table-wrapper')
                             .html('');
 
@@ -843,13 +908,6 @@ class ParallelCoordinates {
                         // Print the stats
                         this._createClusterStatsTable();
                     });
-
-        /*jQuery('.ci-button').tooltip({
-            track: true,
-            tooltipClass: "ci-tooltip",
-            show: false,
-            hide: false
-        });*/
     }
 
     // Creates a table with cluster info

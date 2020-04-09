@@ -73,9 +73,9 @@
   display: block;
 }
 
-/*.pc-titles-text {
-    transform: rotate(-15deg);
-}*/
+.pc-titles-text {
+    text-anchor: middle;
+}
 
 .pc-table-wrapper *, .select2-container, .select2-choice, .select2-results__option {
     font-size: 14px;
@@ -94,6 +94,35 @@
 .pc-cluster-table-wrapper > div {
     margin-right: 15px;
     margin-left: 3px;
+}
+
+.pc-graph-header{
+    padding: 12px;
+    background-color: #2196F3;
+    color: white;
+    margin-bottom: 15px;
+}
+
+.pc-closebtn{
+    margin: 0px 0px 0px 5px;
+    font-weight: bold;
+    float: right;
+    font-size: 22px;
+    line-height: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.pc-closebtn:hover{
+    color: black;
+}
+
+.pc-graph-header-text{
+    margin: 0;
+}
+
+span.pc-graph-header-text {
+    cursor: pointer;
 }
 
 /* The SVG part */
@@ -147,6 +176,29 @@ mark {
 }
 
 /* Clusters part */
+.ci-buttons-active{
+    max-height: 550px;
+    overflow: auto;
+    min-width: 230px;
+    text-align: center;
+}
+
+.ci-buttons-active label{
+    margin-bottom: 5px;
+}
+
+@media (min-width: 800px){
+    .pc-cluster-table-wrapper{
+        display: flex;
+    }
+
+    .ci-buttons-active .ci-button-group{
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+
 .ci-button-group::before ::after{
     display: table;
     content: ' ';
@@ -157,11 +209,11 @@ mark {
 .ci-button-group{
     display: flex;
     flex-wrap: wrap;
-    max-height: 550px;
+    align-items: center;
 }
 
 .ci-button {
-    padding-top: 17px;
+    padding: 10px;
     outline: 1px dashed lightgray;
     text-shadow: #000000 1px 1px 0, 0px 0px 1px rgba(215, 142, 131, 0);
     text-align: center;
@@ -169,8 +221,7 @@ mark {
     font-weight: 600;
     line-height: 1.6;
     color: #fefefe;
-    width: 55px;
-    height: 55px;
+    min-width: 200px;
 
     margin-left: 1px;
     margin-top: 1px;
@@ -183,7 +234,7 @@ mark {
 }
 
 .ci-button-group :last-child{
-    margin-bottom: 3px;
+    margin-bottom: 6px;
 }
 
 .ci-selected{
@@ -200,7 +251,7 @@ mark {
 }
 
 .ci-table{
-    width: 100%;
+    height: min-content;
     max-width: 100%;
     min-width: 400px;
     margin-right: 0px !important;
@@ -215,6 +266,8 @@ mark {
 }
 
 .ci-table h3{
+    white-space: normal;
+    word-break: break-all;
     font-size: 2.3rem;
     margin: 0px 0px 10px 0px;
 }
