@@ -76,15 +76,16 @@ body{
 }
 
 #after-load hr{
-	border: 0;
-	height: 1px;
 	background-image: -webkit-linear-gradient(left, #000046, #8c8b8b, #000046);
 	background-image: -moz-linear-gradient(left, #000046, #8c8b8b, #000046);
 	background-image: -ms-linear-gradient(left, #000046, #8c8b8b, #000046);
 	background-image: -o-linear-gradient(left, #000046, #8c8b8b, #000046);
 	margin-bottom: 25px;
 	margin-top: 3px;
+	flex-shrink: 0;
+	height: 1px;
 	width: 80%;
+	border: 0;
 }
 
 #header{
