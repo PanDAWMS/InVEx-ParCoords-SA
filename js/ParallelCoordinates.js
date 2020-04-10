@@ -439,7 +439,7 @@ class ParallelCoordinates {
 
                 if (count * 18 > 500 - this._margin.top - this._margin.bottom){
                     if(!this._static_height) {
-                        this._height = Math.max(this._height, count * 18 - this._margin.top - this._margin.bottom);
+                        this._height = Math.max(this._height, count * 17 - this._margin.top - this._margin.bottom);
 
                         if(!popup_shown){
                             this._graph_popup
@@ -853,7 +853,9 @@ class ParallelCoordinates {
     // Create cluster info buttons (which call the table creation)
     _createClusterInfo() {
         // Add a div to hold a label and buttons
-        this._ci_buttons_div = this._ci_div.append('div');
+        this._ci_buttons_div = this._ci_div
+            .append('div')
+                .attr('class', 'ci-buttons-wrapper');
 
         // Add 'Choose Cluster' text to it
         this._ci_buttons_div
@@ -882,13 +884,13 @@ class ParallelCoordinates {
                     .attr({'class': 'ci-button',
                             'title': id => "Cluster " + id + ".\nElement count: " + scheme[id].count + "."})
                     .style('background', id => 'linear-gradient(90deg, ' + scheme[id].color +
-                        ' ' + (99 - scale(scheme[id].count)) + '%, white ' + (101 - scale(scheme[id].count)) + '%')
+                        ' ' + (100 - scale(scheme[id].count)) + '%, white ' + (101 - scale(scheme[id].count)) + '%)')
                     .text(id => id)
                     .on("click", id => {
                         d3.event.preventDefault();
 
                         // Apply the activated class
-                        this._ci_buttons_div.attr('class', 'ci-buttons-active');
+                        this._ci_buttons_div.attr('class', 'ci-buttons-wrapper ci-buttons-active');
 
                         // Clean all children
                         this._ci_table_div
