@@ -294,9 +294,6 @@ class ParallelCoordinates {
 
                     clusters_unique.forEach((x, i) =>
                         this._color_scheme[x].color = colorscale(i));
-
-                    console.log('tst', this._color_scheme);
-
                 }
         }
 
@@ -365,8 +362,12 @@ class ParallelCoordinates {
         if(this.options.draw['mode'] === 'cluster' &&
             this.options.draw.parts_visible.cluster_table){
                 this._ci_div = container.append('div')
-                    .attr("class", 'pc-cluster-table-wrapper');
+                    .attr({"class": 'pc-cluster-table-wrapper',
+                        "id": "pc-cluster-" + this.element_id });
                 this._createClusterInfo();
+
+                if (this._height > 1000)
+                    $('#pc-cluster-' + this.element_id).insertAfter('#t' + this.element_id + '_wrapper');
         }
 
         // trash bin :)
@@ -441,6 +442,9 @@ class ParallelCoordinates {
                     if(!this._static_height) {
                         this._height = Math.max(this._height, count * 17 - this._margin.top - this._margin.bottom);
 
+                        if (this._height > 1000)
+                            $('#pc-cluster-' + this.element_id).insertAfter('#t' + this.element_id + '_wrapper');
+
                         if(!popup_shown){
                             this._graph_popup
                                 .style('display', '')
@@ -467,32 +471,36 @@ class ParallelCoordinates {
 
                         popup_shown = true;
                     }
-                    else
-                        if(!popup_shown){
+                    else {
+                        $('#pc-cluster-' + this.element_id).insertAfter('#t' + this.element_id + '_wrapper-outer');
+
+                        if (!popup_shown) {
                             this._graph_popup
                                 .style('display', '')
                                 .append('p')
-                                    .attr('class', 'pc-closebtn')
-                                    .on('click', () => {this._graph_popup.style('display', 'none')})
-                                    .html('&times;');
+                                .attr('class', 'pc-closebtn')
+                                .on('click', () => {
+                                    this._graph_popup.style('display', 'none')
+                                })
+                                .html('&times;');
 
                             this._graph_popup
                                 .append('span')
-                                    .attr('class', 'pc-graph-header-text')
-                                    .html('<b>Info.</b> One of features has too many unique' +
-                                        ' values, the graph height can increased to be human readable. ');
+                                .attr('class', 'pc-graph-header-text')
+                                .html('<b>Info.</b> One of features has too many unique' +
+                                    ' values, the graph height can increased to be human readable. ');
 
                             this._graph_popup
                                 .append('span')
-                                    .attr('class', 'pc-graph-header-text')
-                                    .on('click', () => this._createGraph(false))
-                                    .html(' <u><i>Click here to increase the height.</i></u>');
+                                .attr('class', 'pc-graph-header-text')
+                                .on('click', () => this._createGraph(false))
+                                .html(' <u><i>Click here to increase the height.</i></u>');
 
                             popup_shown = true;
-                        }
-                        else this._graph_popup.select('span')
+                        } else this._graph_popup.select('span')
                             .html('<b>Info.</b> Multiple features have too many unique ' +
                                 'values, the graph height can increased to be human readable. ');
+                    }
                 }
             }
         });
@@ -746,8 +754,13 @@ class ParallelCoordinates {
             dom: 'Blfrtip',
             colReorder: true,
 			stateSave: true,
-            buttons: (this.options.draw.parts_visible.table_colvis)?['colvis']:[],
+            buttons: ((this.options.draw.parts_visible.table_colvis)?['colvis']:[]).concat(['copy', 'csv']),
             "search": {"regex": true},
+
+            columnDefs: [
+                { width: 20, targets: 0 }
+            ],
+            fixedColumns: true,
 
             // Make colors lighter for readability
             "rowCallback": (row, data) => {
@@ -894,7 +907,7 @@ class ParallelCoordinates {
 
                         // Clean all children
                         this._ci_table_div
-                            .style('border', "5px dashed " + this._color_scheme[id].color + "33")
+                            //.style('border', "5px dashed " + this._color_scheme[id].color + "33")
                             .attr('class', 'ci-table pc-table-wrapper')
                             .html('');
 
@@ -973,9 +986,9 @@ class ParallelCoordinates {
             data: this._ci_cells,
             columns: this._ci_header,
             mark: true,
-            dom: 'Alfrtip',
+            dom: 'ABlfrtip',
             colReorder: true,
-            buttons: (this.options.draw.parts_visible.table)?['colvis']:[],
+            buttons: ['copy', 'csv'],
             "search": {"regex": true}
         });
 

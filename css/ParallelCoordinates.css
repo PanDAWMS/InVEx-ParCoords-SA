@@ -210,6 +210,7 @@ mark {
 .ci-button-group{
     max-width: 450px;
     width: max-content;
+    padding-top: 5px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -218,7 +219,7 @@ mark {
 
 .ci-button {
     padding: 10px;
-    outline: 1px dashed lightgray;
+    outline: 1px solid lightgray;
     text-shadow: 0 1px 0 #000, 1px 0 0 #000, 0 -1px 0 #000, -1px 0 0 #000;
     text-align: center;
     font-size: 0.75rem;
@@ -244,7 +245,7 @@ mark {
 }
 
 .ci-selected{
-    outline: 2px dashed black;
+    outline: 2px solid black;
     z-index: 1;
 }
 
@@ -282,6 +283,6 @@ mark {
     margin: 0px 0px 8px 0px;
 }
 
-.ci-table table{
+.ci-table > div {
     width: min-content;
 }
