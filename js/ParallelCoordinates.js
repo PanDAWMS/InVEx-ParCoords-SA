@@ -244,7 +244,11 @@ class ParallelCoordinates {
 
         // Arrays with numbers-only and string data parts
         this._features_numbers = this._features.filter((name, i) => this._values[i].every(x => !isNaN(x)));
-        this._features_strings = this._features.filter((name) => !this._features_numbers.includes(name));
+        this._features_dates = this._features.filter((name, i) =>
+            !this._features_numbers.includes(name) && this._values[i].every(x => !isNaN(Date.parse(x))));
+        this._date_values = {};
+        this._features_strings = this._features.filter((name) =>
+            !this._features_numbers.includes(name) && !this._features_dates.includes(name));
 
         // Coloring modes if clustering enabled
         if (this.options.draw.mode === "cluster")
@@ -398,9 +402,15 @@ class ParallelCoordinates {
 
         // Sizes of the graph
         this._margin = { top: 30, right: 10, bottom: 10, left: 45 };
-        this._width = (this._graph_features.length > 5 ? 100 * this._graph_features.length : 600) -
+        this._column_width = 120;
+        this._width = (this._graph_features.length > 5 ?
+                this._column_width * this._graph_features.length :
+                this._column_width * 6) -
             this._margin.left - this._margin.right;
         this._height = 500 - this._margin.top - this._margin.bottom;
+
+        // Font desctiption
+        this._font = '\'Oswald script=all rev=1\' 10px sans-serif';
 
         // Arrays for x and y data, and brush dragging
         this._x = d3.scale.ordinal().rangePoints([0, this._width], 1);
@@ -512,12 +522,23 @@ class ParallelCoordinates {
                     .domain([Math.min(...this._values[this._features.indexOf(dim)]),
                         Math.max(...this._values[this._features.indexOf(dim)])])
                     .range([this._height, 0]);
-            else {
-                this._y[dim] = d3.scale.ordinal()
-                    .domain(this._values[this._features.indexOf(dim)])
-                    .rangePoints([this._height, 0]);
-                this._ranges[dim] = this._y[dim].domain().map(this._y[dim]);
-            }
+            else if (this._isDate(dim)){ //Date.parse
+                    this._date_values[dim] = this._values[this._features.indexOf(dim)].map(Date.parse);
+
+                    this._y[dim] = d3.time.scale()
+                        .domain([Math.min(...this._date_values[dim]),
+                            Math.max(...this._date_values[dim])])
+                        .nice()
+                        .range([this._height, 0]);
+                    this._ranges[dim] = this._y[dim].domain().map(this._y[dim]);
+                }
+                else
+                {
+                    this._y[dim] = d3.scale.ordinal()
+                        .domain(this._values[this._features.indexOf(dim)])
+                        .rangePoints([this._height, 0]);
+                    this._ranges[dim] = this._y[dim].domain().map(this._y[dim]);
+                }
         });
 
         // Change the SVG size to draw lines on
@@ -526,8 +547,13 @@ class ParallelCoordinates {
                 "height": this._height + this._margin.top + this._margin.bottom });
 
         // Array to make brushes
-        this._line_data = this._data.map(x =>
-            Object.fromEntries(this._graph_features.map(f => ([f, x[this._features.indexOf(f)]]))));
+        this._line_data = this._data.map((x, i) =>
+            Object.fromEntries(this._graph_features.map(f =>
+                ([f, (this._isDate(f) ? this._date_values[f][i] : x[this._features.indexOf(f)] )])
+            ))
+        );
+
+        console.log('linedata', this._line_data);
 
         // Grey background lines for context
         this._background = this._svg.append("g")
@@ -654,16 +680,29 @@ class ParallelCoordinates {
                 }));
 
         // Function to limit the length of the strings
-        let limit = ((x, width, font) => {
-            let sliced = false;
-            while (getTextWidth(x, font) > width) {
-                x = x.slice(0, -1);
-                sliced = true;
-            }
-            return x + ((sliced) ? '...' : '');
-        });
+        let format = (x) => {
+                if (x instanceof Date) return Intl.DateTimeFormat('en-GB', {
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: 'numeric'
+                    //minute: 'numeric'
+                }).format(x) + 'h';
+                return isNaN(x) ? x : numberWithSpaces(x);
+            },
+
+            limit = ((x, width, font) => {
+                let sliced = false;
+
+                while (getTextWidth((sliced) ? x + '...' : x, font) > width) {
+                    x = x.slice(0, -1);
+                    sliced = true;
+                }
+                return x + ((sliced) ? '...' : '');
+            });
+
         var show_tooltip = (d, width) => {
-            if(!limit(d, width, '\'Oswald script=all rev=1\' 10px sans-serif').endsWith('...')) return;
+            if(!limit(d, width, _PCobject._font).endsWith('...')) return;
 
             //on mouse hover show the tooltip
             _PCobject._tooltip.transition()
@@ -677,23 +716,22 @@ class ParallelCoordinates {
         // Add an axis and titles
         this._g.append("g")
             .attr("class", "axis")
-            .each(function (d) {d3.select(this).call(_PCobject._axis.scale(_PCobject._y[d]))})
+            .each(function (d) {d3.select(this).call(_PCobject._axis.scale(_PCobject._y[d]));})
             .append("text")
                 .attr({
                     "y": -9,
                     "class": "pc-titles-text"
                 })
-                .text((x) => limit(x, 85, '\'Oswald script=all rev=1\' 10px sans-serif'))
-                .on("mouseover", (d) => show_tooltip(d, 85))
+                .text((text) => limit(text, _PCobject._column_width - 15, _PCobject._font))
+                .on("mouseover", (d) => show_tooltip(d, this._column_width - 15))
                 .on("mouseout", () => _PCobject._tooltip.transition().duration(500).style("opacity", 0));
 
         // Limit the tick length and show a tooltip on mouse hover
         d3.selectAll('.tick')
-            .on("mouseover", (e) => show_tooltip(isNaN(e) ? e : numberWithSpaces(e), 70))
+            .on("mouseover", (obj) => show_tooltip(format(obj), _PCobject._column_width - 24))
             .on("mouseout", () => _PCobject._tooltip.transition().duration(500).style("opacity", 0))
             .select('text')
-                .text((a) => limit(isNaN(a) ? a : numberWithSpaces(a), 70,
-                    '\'Oswald script=all rev=1\' 10px sans-serif'));
+                .text(obj => limit(format(obj), _PCobject._column_width - 24, _PCobject._font));
 
         // Add and store a brush for each axis
         this._g.append("g")
@@ -1056,6 +1094,7 @@ class ParallelCoordinates {
     _parcoordsToTable(index) { return this._cells[index]; }
 
     _isNumbers(featureName) { return this._features_numbers.includes(featureName); }
+    _isDate(featureName) { return this._features_dates.includes(featureName); }
 
     // Callback to change the lines visibility after 'draw()' completed
     _on_table_ready(object) {
