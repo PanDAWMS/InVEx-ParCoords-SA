@@ -236,6 +236,9 @@ class ParallelCoordinates {
                 !skip['dims'].values.some(x => (x.includes(elem) || elem.includes(x)));
         });
 
+        // Remove all line breaks
+        this._data = this._data.map((row) => row.map(obj => obj.replace(/\r?\n|\r/, "")));
+
         // Reference array with all values as strings
         this._ids = this._data.map((row) => row.map(String));
 
@@ -440,7 +443,7 @@ class ParallelCoordinates {
 
         let popup_shown = false;
         this._graph_features.forEach(dim => {
-            if (!this._isNumbers(dim)) {
+            if (this._isStrings(dim)) {
                 let count = [...new Set(this._values[this._features.indexOf(dim)])].length;
 
                 this._features_strings_length.push({
@@ -517,12 +520,17 @@ class ParallelCoordinates {
 
         // Make scales for each feature
         this._graph_features.forEach(dim => {
-            if (this._isNumbers(dim))
-                this._y[dim] = d3.scale.linear()
-                    .domain([Math.min(...this._values[this._features.indexOf(dim)]),
-                        Math.max(...this._values[this._features.indexOf(dim)])])
-                    .range([this._height, 0]);
-            else if (this._isDate(dim)){ //Date.parse
+            if (this._isNumbers(dim)){
+                let min = Math.min(...this._values[this._features.indexOf(dim)]),
+                    max = Math.max(...this._values[this._features.indexOf(dim)]),
+                    domain = [min, max];
+
+                if (0 <= min && min <= 100 && 0 <= max && max <= 100) domain = [0, 100];
+                if (0 <= min && min <= 1 && 0 <= max && max <= 1) domain = [0, 1];
+
+                this._y[dim] = d3.scale.linear().domain(domain).nice().range([this._height, 0]);
+            }
+            else if (this._isDate(dim)){
                     this._date_values[dim] = this._values[this._features.indexOf(dim)].map(Date.parse);
 
                     this._y[dim] = d3.time.scale()
@@ -530,7 +538,6 @@ class ParallelCoordinates {
                             Math.max(...this._date_values[dim])])
                         .nice()
                         .range([this._height, 0]);
-                    this._ranges[dim] = this._y[dim].domain().map(this._y[dim]);
                 }
                 else
                 {
@@ -552,8 +559,6 @@ class ParallelCoordinates {
                 ([f, (this._isDate(f) ? this._date_values[f][i] : x[this._features.indexOf(f)] )])
             ))
         );
-
-        console.log('linedata', this._line_data);
 
         // Grey background lines for context
         this._background = this._svg.append("g")
@@ -890,10 +895,9 @@ class ParallelCoordinates {
 
                 if (_PCobject._visible
                         .some(x => x
-                            .every((y, i) =>
-                                y === data[i]))) {
+                            .every((y, i) => y === data[i])
+                        )){
                     _PCobject._search_results.push(data);
-
                     return true;
                 }
                 return false;
@@ -998,7 +1002,7 @@ class ParallelCoordinates {
                 d3.median(this._ci_cluster_data, row => (row[i] === null) ? 0 : row[i]),
                 (this._ci_cluster_data.length > 1) ? d3.deviation(this._ci_cluster_data, row =>
                     (row[i] === null) ? 0 : row[i]) : '-'
-            ] : [x + ' <i>(click to expand)</i>', '-','-','-','-','-']);
+            ] : [x + ((this._isStrings(x))?' <i>(click to expand)</i>':''), '-','-','-','-','-']);
 
         // Calculate stats for string values
         this._ci_string_stats = this._features_strings.map((name) => [name,
@@ -1095,6 +1099,7 @@ class ParallelCoordinates {
 
     _isNumbers(featureName) { return this._features_numbers.includes(featureName); }
     _isDate(featureName) { return this._features_dates.includes(featureName); }
+    _isStrings(featureName) { return this._features_strings.includes(featureName); }
 
     // Callback to change the lines visibility after 'draw()' completed
     _on_table_ready(object) {
@@ -1151,7 +1156,7 @@ class ParallelCoordinates {
             let isVisible = actives.every(function (p, i) {
                 let value = null;
 
-                if (!object._isNumbers(p))
+                if (object._isStrings(p))
                     value = object._ranges[p][object._y[p].domain().findIndex(x => x === d[p])];
                 else value = d[p];
 
