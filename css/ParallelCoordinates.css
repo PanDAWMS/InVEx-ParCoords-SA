@@ -65,6 +65,10 @@
     margin-bottom: 3px;
 }
 
+.pc-table-wrapper > div > .dt-buttons {
+    margin-bottom: 3px;
+}
+
 .tick > text {
   text-overflow: ellipsis;
   width: 5px;

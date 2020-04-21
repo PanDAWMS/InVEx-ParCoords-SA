@@ -403,6 +403,11 @@ class ParallelCoordinates {
         // Clear the graph div if something is there
         if (this._svg !== undefined) this._svg.remove();
 
+        // Initialize a search result with all objects visible and
+        // 'visible' data array with lines on foreground (not filtered by a brush)
+        this._search_results = this._ids;
+        this._visible = this._ids;
+
         // Sizes of the graph
         this._margin = { top: 30, right: 10, bottom: 10, left: 45 };
         this._column_width = 120;
@@ -766,11 +771,6 @@ class ParallelCoordinates {
             .append("table")
                 .attr({"id": "t" + this.element_id,
                         "class": "table hover"});
-
-        // Initialize a search result with all objects visible and
-        // 'visible' data array with lines on foreground (not filtered by a brush)
-        this._search_results = this._ids;
-        this._visible = this._ids;
 
         // Map headers for the tables
         this._theader = this._features.map(row => {
