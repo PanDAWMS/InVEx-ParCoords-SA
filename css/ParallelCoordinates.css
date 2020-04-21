@@ -200,6 +200,12 @@ mark {
     }
 }
 
+@media (min-width: 1800px){
+    .pc-table-wrapper {
+        min-width: 1000px;
+    }
+}
+
 .ci-button-group::before ::after{
     display: table;
     content: ' ';
