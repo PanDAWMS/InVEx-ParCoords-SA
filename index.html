@@ -8,7 +8,7 @@
 
         <title>InVEx</title>
         <link rel="stylesheet" type="text/css"
-              href="https://cdn.datatables.net/v/ju-1.12.1/dt-1.10.20/b-1.6.1/b-colvis-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/r-2.2.3/datatables.min.css"/>
+              href="https://cdn.datatables.net/v/ju-1.12.1/jq-3.3.1/jszip-2.5.0/dt-1.10.20/b-1.6.1/b-colvis-1.6.1/b-flash-1.6.1/b-html5-1.6.1/b-print-1.6.1/datatables.min.css"/>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato&family=Source+Sans+Pro&display=swap">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.9/css/select2.min.css"/>
 
@@ -19,7 +19,7 @@
     <body>
         <script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
         <script type="text/javascript"
-                src="https://cdn.datatables.net/v/ju-1.12.1/jq-3.3.1/dt-1.10.20/b-1.6.1/b-colvis-1.6.1/cr-1.5.2/fc-3.3.0/fh-3.1.6/r-2.2.3/datatables.min.js"></script>
+                src="https://cdn.datatables.net/v/ju-1.12.1/jq-3.3.1/jszip-2.5.0/dt-1.10.20/fc-3.3.0/b-1.6.1/b-colvis-1.6.1/b-flash-1.6.1/b-html5-1.6.1/b-print-1.6.1/datatables.min.js"></script>
         <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
         <script type="text/javascript" src="https://unpkg.com/simple-statistics@6.1.1/dist/simple-statistics.min.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.19.1/URI.min.js"></script>
@@ -36,15 +36,18 @@
             <p>To show a set of points in an n-dimensional space, a backdrop is drawn consisting of n parallel lines,
                 typically vertical and equally spaced. A point in n-dimensional space is represented as a polyline with
                 vertices on the parallel axes; the position of the vertex on the i-th axis corresponds to the i-th
-                coordinate of the point. (Just a sample description text)
+                coordinate of the point.
                 <br><br>
+            </p>
+
             <p>
-                <span>More info at GitHub:</span>
+                <span>More info about the project can be found at GitHub:</span>
                 <a href="https://github.com/PanDAWMS/InVEx-ParCoords-SA">
                     <img src="assets/images/github-logo.png" alt="GitHub repo link" style="height:25px">
                 </a>
             </p>
 
+            <div id="latest-load"></div>
 
             <div id="drop_zone" onclick="document.getElementById('files').click();">
                 Drop files here or click here to choose a file
@@ -79,6 +82,20 @@
             dropZone.addEventListener('drop', handleFileSelect, false);
 
             document.getElementById('files').addEventListener('change', handleFileSelect, false);
+
+            if (localStorage.getItem("latest_data") !== null){
+                let prev = JSON.parse(localStorage.getItem("latest_data"));
+
+                d3.select('#latest-load')
+                    .append('h3')
+                    .text('Load a previous file:');
+
+                d3.select('#latest-load')
+                    .append('p')
+                        .html('<b>' + prev.file.name + '</b>, ' +
+                            formatBytes(prev.file.size) + ', loaded at ' + prev.file.dateLoaded)
+                        .on('click', () => loadData(prev));
+            }
         </script>
     </body>
 </html>
