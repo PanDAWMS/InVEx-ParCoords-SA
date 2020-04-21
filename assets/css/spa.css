@@ -16,7 +16,7 @@ body{
 #first-page{
 	width:100%;
 
-	font-family: Source Code Pro, monospace;
+	font-family: 'Lato', sans-serif;
 	color: white;
 	text-align: center;
 
@@ -30,18 +30,22 @@ body{
 }
 
 #first-page h1{
+	font-family: Source Code Pro, monospace;
 	font-size: 45px;
 	line-height: 48px;
 	margin-bottom: 100px;
 	text-shadow: 2px 2px 3px rgba(255,255,255,0.4);
 }
 
+#first-page h3 {
+	font-family: Source Code Pro, monospace;
+	margin-bottom: 5px;
+}
+
 #first-page p{
 	left: 25%;
 	max-width: 50%;
 	position: relative;
-
-	font-family: 'Lato', sans-serif;
 }
 
 #first-page p span{
@@ -59,11 +63,19 @@ body{
 	border-radius: 5px;
 	padding: 25px;
 	text-align: center;
-	font-family: 'Lato', sans-serif;
 	min-width: 300px;
 	max-width: 60%;
 	margin: auto;
 	color: white;
+}
+
+#latest-load p{
+	margin-top: 5px;
+	cursor: pointer;
+}
+
+#latest-load p:hover {
+	text-decoration: underline;
 }
 
 #after-load{

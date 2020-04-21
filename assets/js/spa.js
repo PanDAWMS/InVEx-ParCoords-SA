@@ -1,5 +1,7 @@
 var theData = {};
 
+function formatBytes(a,b=2){if(0===a)return"0 Bytes";const c=0>b?0:b,d=Math.floor(Math.log(a)/Math.log(1024));return parseFloat((a/Math.pow(1024,d)).toFixed(c))+" "+["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"][d]}
+
 function colorchange() {
     if (theData._coord._color === null &&
         !document.getElementById('scales').checked) return;
@@ -13,8 +15,8 @@ function colorchange() {
     theData._coord.options.skip.dims.values = theData._coord._graph_features;
 
     theData._coord.updateData("ParallelCoordinatesGraph",
-        theData._dimNames,
-        theData._realData,
+        theData._currentData.features,
+        theData._currentData.objects,
         (document.getElementById('scales').checked) ?
             $('#color_selector').val() :
             null,
@@ -35,40 +37,35 @@ function handleFileSelect(evt) {
             f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
             '</li>');
 
+        theData._file_info = {
+            name: f.name,
+            type: f.type,
+            size: f.size,
+            dateModified: f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
+            dateLoaded: Intl.DateTimeFormat('en-GB', {
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    second: 'numeric'
+                }).format(Date.now()),
+        };
+
         Papa.parse(f, {
             worker: true,
             skipEmptyLines: true,
             complete: function (results) {
                 theData._papa_raw = results;
-                theData._dimNames = theData._papa_raw.data[0];
-                theData._realData = theData._papa_raw.data.filter((x, i) => i > 0);
 
-                theData._coord = new ParallelCoordinates("ParallelCoordinatesGraph",
-                    theData._dimNames,
-                    theData._realData,
-                    null,
-                    null);
+                let data ={
+                    file: theData._file_info,
+                    features: results.data[0],
+                    objects: results.data.filter((x, i) => i > 0)
+                };
 
-                d3.select('#color_div')
-                    .append('select')
-                    .attr({
-                        'class': 'select',
-                        'id': 'color_selector'
-                    });
-
-                $('#color_selector').select2({
-                    closeOnSelect: true,
-                    data: theData._dimNames.map((d) => {
-                        return {id: d, text: d};
-                    }),
-                    width: '400px'
-                })
-                    .on("change.select2", () => {
-                        colorchange();
-                    });
-
-                d3.select('#first-page').style('display', 'none');
-                d3.select('#after-load').style('display', 'flex');
+                localStorage.setItem('latest_data', JSON.stringify(data));
+                loadData(data);
             }
         });
     }
@@ -78,4 +75,35 @@ function handleDragOver(evt) {
     evt.stopPropagation();
     evt.preventDefault();
     evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+}
+
+function loadData(data){
+    theData._currentData = data;
+
+    theData._coord = new ParallelCoordinates("ParallelCoordinatesGraph",
+        data.features,
+        data.objects,
+        null,
+        null);
+
+    d3.select('#color_div')
+        .append('select')
+        .attr({
+            'class': 'select',
+            'id': 'color_selector'
+        });
+
+    $('#color_selector').select2({
+        closeOnSelect: true,
+        data: data.features.map((d) => {
+            return {id: d, text: d};
+        }),
+        width: '400px'
+    })
+        .on("change.select2", () => {
+            colorchange();
+        });
+
+    d3.select('#first-page').style('display', 'none');
+    d3.select('#after-load').style('display', 'flex');
 }
