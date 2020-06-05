@@ -7,6 +7,14 @@
 }
 
 /* ParCoords main styles */
+.pc-loading{
+    background-image: url(../loading.gif);
+    background-repeat: no-repeat;
+    padding-left: 20px;
+    background-size: contain;
+    margin-top: 10px;
+}
+
 .pc-container{
     display: flex;
     width: auto;
@@ -14,6 +22,7 @@
 }
 
 .pc-svg-container{
+    position: relative;
     width: auto;
     flex: 0;
     margin-right: 20px;
@@ -41,7 +50,13 @@
     overflow: auto;
     min-width: 500px;
     max-width: max-content;
-    flex: 1;
+    flex: 1 1 40%;
+}
+
+@media (min-width: 1800px){
+    .pc-table-wrapper{
+        flex-basis: 50%;
+    }
 }
 
 .pc-table-wrapper > div {
@@ -132,14 +147,22 @@ span.pc-graph-header-text :last-of-type {
 }
 
 /* The SVG part */
-svg {
+.pc-graph-placeholder{
+    float:left;
+}
+
+svg, canvas{
+    display: block;
+    position: absolute;
     font: 10px sans-serif;
 }
 
+
 .background path {
     fill: none;
-    stroke: #ddd5;
-    shape-rendering: crispEdges;
+    stroke: #ddd;
+    stroke-opacity: 0.4;
+    shape-rendering: optimizeSpeed ;
 }
 
 .foreground path {
@@ -201,12 +224,6 @@ mark {
 @media (min-width: 800px){
     .pc-cluster-table-wrapper{
         display: flex;
-    }
-}
-
-@media (min-width: 1800px){
-    .pc-table-wrapper {
-        min-width: 1000px;
     }
 }
 
@@ -294,5 +311,5 @@ mark {
 }
 
 .ci-table > div {
-    width: min-content;
+    max-width: min-content;
 }
