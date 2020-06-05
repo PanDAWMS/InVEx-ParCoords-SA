@@ -70,7 +70,7 @@ body{
 }
 
 #latest-load p{
-	margin-top: 5px;
+	margin: 5px 0px 5px 0px;
 	cursor: pointer;
 }
 
@@ -135,7 +135,7 @@ body{
 	overflow: auto;
 	background: white;
 	border-radius: 5px;
-	text-align: start;
+	text-align: left;
 }
 
 .pc-container .dt-button{

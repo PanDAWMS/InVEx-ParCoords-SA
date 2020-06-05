@@ -2,7 +2,7 @@
 <html class="no-js" lang="en" dir="ltr">
     <head>
         <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <!-- Set the viewport width to device width for mobile -->
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
@@ -83,18 +83,24 @@
 
             document.getElementById('files').addEventListener('change', handleFileSelect, false);
 
-            if (localStorage.getItem("latest_data") !== null){
-                let prev = JSON.parse(localStorage.getItem("latest_data"));
+            let latest = [];
+            for(let i = 0; i < 5; i++)
+                if(localStorage.getItem('latest_data' + i) !== null)
+                    latest.push(JSON.parse(localStorage.getItem('latest_data' + i)));
 
+            if (latest.length > 0){
                 d3.select('#latest-load')
                     .append('h3')
                     .text('Load a previous file:');
 
                 d3.select('#latest-load')
+                    .selectAll('p')
+                    .data(latest)
+                    .enter()
                     .append('p')
-                        .html('<b>' + prev.file.name + '</b>, ' +
-                            formatBytes(prev.file.size) + ', loaded at ' + prev.file.dateLoaded)
-                        .on('click', () => loadData(prev));
+                        .html((a) => '<b>' + a.file.name + '</b>, ' +
+                            formatBytes(a.file.size) + ', loaded at ' + a.file.dateLoaded)
+                        .on('click', (a) => loadData(a));
             }
         </script>
     </body>
