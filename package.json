@@ -5,8 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "prepare-js": "cat parcoords/js/ParallelCoordinates.js > index.js && echo '\nexport default ParallelCoordinates;' >> index.js",
-    "prepare-css": "cat parcoords/css/ParallelCoordinates.css > ParallelCoordinates.css",
+    "prepare-js": "cat imports parcoords/ParallelCoordinates.js > index.js && echo '\nexport default ParallelCoordinates;' >> index.js",
+    "prepare-css": "cat parcoords/ParallelCoordinates.css > ParallelCoordinates.css",
     "prepare-assets": "npm run -s prepare-js & npm run -s prepare-css",
     "submodule-update": "rm -rf parcoords && git clone -b master git://github.com/PanDAWMS/InVEx-ParCoords-SA.git parcoords",
     "install": "npm run -s submodule-update && npm run -s prepare-assets"
