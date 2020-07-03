@@ -22,7 +22,6 @@ class ParallelCoordinates {
         // Save the time for debug purposes
         this._timeStart = Date.now();
 
-
         // This function allows to jump to a certain row in a DataTable
         $.fn.dataTable.Api.register('row().show()', function () {
             let page_info = this.table().page.info(),
@@ -43,7 +42,6 @@ class ParallelCoordinates {
             return this;
         });
 
-
         // This is used to manipulate d3 objects
         // e.g., to move a line on a graph to the front
         // https://github.com/wbkd/d3-extended
@@ -61,7 +59,6 @@ class ParallelCoordinates {
             });
         };
 
-
         // Ability to count a number of a certain element in an array
         if (!Array.prototype.hasOwnProperty('count'))
             Object.defineProperties(Array.prototype, {
@@ -71,7 +68,6 @@ class ParallelCoordinates {
                     }
                 }
             });
-
 
         // Update data and draw the graph
         if (arguments.length > 0) {
@@ -91,8 +87,6 @@ class ParallelCoordinates {
     //  data_array - array with all data about objects under consideration
     //  clusters_list - array with all clusters in those data
     //  clusters_color_scheme - array with the color scheme
-    //  aux_features - auxillary features that are not presented on the graph   -- removed
-    //  aux_data_array - auxillaty data                                         -- removed
     //  options - graph options
     //
     // ********
@@ -110,8 +104,6 @@ class ParallelCoordinates {
             _color: clusters,
             _color_scheme: clusters_color_scheme
         };
-        //this._aux_features = aux_features;
-        //this._aux_data = aux_data_array;
 
         // Debug statistics counters
         this._search_quantity = 0;
@@ -119,12 +111,15 @@ class ParallelCoordinates {
         this._search_time_min = -1;
         this._search_time_max = -1;
 
+        this.updateOptions(options);
+    }
+
+    updateOptions(options = {}) {
         // If options does not have 'draw' option, make default one
         if (!options.hasOwnProperty('draw') &&
             (typeof this.options === 'undefined' ||
                 !this.options.hasOwnProperty('draw'))) {
             options.draw = {
-                framework: "d3",    // Possible values: 'd3'. todo: remove 'plotly' back
                 mode: "print",       // Possible values: 'print', 'cluster'
                 //, first_column_name: "Clusters"    // Custom name for 'clusters' tab in the table
                 parts_visible: {
@@ -147,7 +142,7 @@ class ParallelCoordinates {
         ////// todo: options.draw.parts_visible checks
 
         // If options does not have 'skip' option, make default one
-        // Default is to show 6 first lanes
+        // Default is to show 5 first lanes
         if (!options.hasOwnProperty('skip') && !this.options.hasOwnProperty('skip'))
             options.skip = {
                 dims: {
@@ -158,6 +153,15 @@ class ParallelCoordinates {
                 }
             };
         else if (options.hasOwnProperty('skip')) this.options.skip = options.skip;
+
+        if (!options.hasOwnProperty('worker') && !this.options.hasOwnProperty('worker')) {
+            options.worker = {
+                enabled: true,
+                offscreen: false
+            }
+        }
+
+        if (!window.Worker) this.options.worker.enabled = false;
 
         this._data.options = this.options;
 
@@ -182,12 +186,15 @@ class ParallelCoordinates {
         // A link to this ParCoord object
         var _PCobject = this;
 
-        if (window.Worker) {
+        // In case Web Workers are supported, use them
+        if (this.options.worker.enabled) {
+            // Surprize! First we need to create the worker!
             this._worker = this._create_worker();
-            //this._worker._PCobject = _PCobject;
 
+            // Tell worker to prepare
             this._call('run', '_prepare_worker', _PCobject._prepare_worker);
 
+            // Register necessary functions
             this._call('register', '_prepare_d3', _PCobject._prepare_d3);
             this._call('register', '_prepare_graph', _PCobject._prepare_graph);
             this._call('register', '_update_canvas_size', _PCobject._update_canvas_size);
@@ -196,23 +203,28 @@ class ParallelCoordinates {
             this._call('register', '_draw_background', _PCobject._draw_background);
             this._call('register', '_calculate_brushes', _PCobject._calculate_brushes);
 
+            // Worker callback
             this._worker.onmessage = function (e) {
                 let response = e.data;
                 //console.log(response);
 
+                // When function _process_data is registered - make it process the data
                 if (response.type === 'register') {
                     if (response.name === '_process_data')
                         _PCobject._call('process', '_process_data', '', _PCobject._data);
                 }
 
+                // 'process' callbacks
                 if (response.type === 'process') {
                     //console.log('some_process', response.name, response.result);
 
+                    // When the data is processed - continue building the DOM
                     if (response.name === '_process_data') {
                         _PCobject._data = response.result;
                         _PCobject._prepareDOM();
                     }
 
+                    // When the graph dimensions are calculated - remember them
                     if (response.name === '_prepare_graph')
                     {
                         _PCobject._data._width = response.result._width;
@@ -220,12 +232,11 @@ class ParallelCoordinates {
                         _PCobject._data._features_strings_length = response.result._features_strings_length;
                         _PCobject._data._features_strings_params = response.result._features_strings_params;
 
-                        //console.log( _PCobject._data._features_strings_params);
-
                         // Arrays for x and y data, and brush dragging
                         _PCobject._data._dragging = {};
                     }
 
+                    // Draw callbacks
                     if (response.name === '_draw_background' || response.name === '_draw_foreground') {
                         if (response.name === '_draw_background') _PCobject._worker._running_bg = false;
                         else _PCobject._worker._running_fg = false;
@@ -236,37 +247,49 @@ class ParallelCoordinates {
                             _PCobject._worker._bg_needs_redraw = false;
                             _PCobject._worker._fg_needs_redraw = false;
                         }
+
+                        _PCobject._loading.style('display', 'none');
+                        _PCobject._worker._calculating = false;
                     }
 
+                    // Brush calculation callback
                     if (response.name === '_calculate_brushes') {
                         _PCobject._worker._running_brushes = false;
 
                         if (_PCobject._worker._fg_needs_brushes) {
                             _PCobject._worker._fg_needs_brushes = false;
+
                             _PCobject._request_brushes(_PCobject._worker._brushes);
                         } else {
                             _PCobject._visible = response.result;
                             _PCobject._datatable.draw();
                             _PCobject._redraw();
                         }
-                    }
 
+                        _PCobject._loading.style('display', 'none');
+                        _PCobject._worker._calculating = false;
+                    }
                 }
 
-                if (_PCobject._worker._callback !== undefined) _PCobject._worker._callback.bind(_PCobject)();
+                // Custom callbacks
+                if (_PCobject._worker._callback !== undefined) {
+                    _PCobject._worker._callback.bind(_PCobject)();
+                    _PCobject._worker._callback = undefined;
+                }
             }
         } else {
+            // If Workers are unavaliable, process data in the main thread
             this._process_data();
-            this._prepareDOM();
         }
 
         // Clear the whole div if something is there
         $("#" + this.element_id).empty();
 
+        // 'Building graph' placeholder while everything is calculated
         this._loading = d3.select("#" + this.element_id)
             .append('div')
             .attr('class', 'pc-loading')
-            .text('Building graph, please wait... ');
+            .text('Building the diagram, please wait... ');
 
         // A selectBox with chosen features
         if (this.options.draw.parts_visible.selector) {
@@ -291,25 +314,34 @@ class ParallelCoordinates {
         this._svg_container = this._container.append("div")
             .attr('class', 'pc-svg-container');
 
+        // Create necessary divs
         this._graph_header = this._svg_container.append("div");
         this._graph_placeholder = this._svg_container.append('div').attr('class', 'pc-graph-placeholder');
 
+        // Create canvases
         this._canvas_background = this._svg_container.append('canvas');
         this._canvas_foreground = this._svg_container.append('canvas');
 
-        this._offscreen = typeof this._canvas_foreground.node().transferControlToOffscreen === "function";
+        // Check if OffscreenCanvas enabled
+        this.options.worker.offscreen = this.options.worker.offscreen &&
+            typeof this._canvas_foreground.node().transferControlToOffscreen === "function";
 
-        if (this._offscreen) {
+        // If so, transfer control to it
+        if (this.options.worker.offscreen) {
             this._canvas_foreground_t = this._canvas_foreground.node().transferControlToOffscreen();
             this._canvas_background_t = this._canvas_background.node().transferControlToOffscreen();
         }
+        // else - draw in main thread
         else {
             if (this._d3 === undefined) this._d3 = {};
             this._d3.foreground = this._canvas_foreground.node().getContext('2d');
             this._d3.background = this._canvas_background.node().getContext('2d');
         }
+
+        // Clear canvas variable from previous runs
         delete this._canvas_loaded;
 
+        // Create the SVG
         this._graph = this._svg_container.append("svg");
 
         // Add a tooltip for long names
@@ -336,8 +368,10 @@ class ParallelCoordinates {
                     'class': 'pc-table-wrapper'
                 });
 
-
-        if (!window.Worker) {
+        // If Workers unavailable - continue preparing DOM
+        if (!this.options.worker.enabled) {
+            this._prepare_d3();
+            this._prepare_graph();
             this._prepareDOM();
         }
     }
@@ -360,9 +394,17 @@ class ParallelCoordinates {
                 .on("change.select2", () => {
                     this._data._graph_features = $('#s' + this.element_id).val();
                     this.options.skip.dims.values = this._data._graph_features;
-                    this._call('process', '_prepare_graph', '',
-                        {_graph_features: this._data._graph_features},
-                        this._createGraph);
+
+                    this._prepare_d3();
+
+                    if (this.options.worker.enabled) {
+                        this._call('process', '_prepare_graph', '',
+                            { _graph_features: this._data._graph_features },
+                            this._createGraph);
+                    }
+                    else {
+                        this._createGraph();
+                    }
                 });
 
             this._selectBox.data('select2').$container.css("display", "block");
@@ -385,28 +427,12 @@ class ParallelCoordinates {
                 $('#pc-cluster-' + this.element_id).insertAfter('#t' + this.element_id + '_wrapper');
         }
 
+        // When the data is ready - remove the placeholder
         this._loading.style('display', 'none');
         this._container.style('display', '');
         if (this.options.draw.parts_visible.selector) this._selector_p.style('display', '');
 
         return this;
-
-        // trash bin :)
-
-        /* $("#" + element_id + ".svg")
-                .tooltip({
-                track: true
-                });*/
-        // console.log('ids', _ids);
-
-        //console.log(_PCobject);
-        //bold[0][i].attr("display", "block");
-        //stroke: #0082C866;
-
-        /*_PCobject._datatable.rows().nodes()
-            .to$().removeClass('table-selected-line');*/
-
-        //d3.select('#' + this.element_id).style('display', '');
     }
 
     // Function to draw the graph
@@ -435,6 +461,7 @@ class ParallelCoordinates {
         // Modify the graph height in case of ordinal values
         if (typeof static_height === 'boolean') this._data._static_height = static_height;
 
+        // Create popup saying the user he can adjust the height
         if (this._data._features_strings_params.overflow_count > 0) {
             let popup_text = (this._data._features_strings_params.overflow_count > 1) ?
                 '<b>Info.</b> Multiple features have too many unique values, the graph height was ' +
@@ -483,7 +510,7 @@ class ParallelCoordinates {
 
         this._prepare_d3();
 
-        if (window.Worker && this._offscreen) {
+        if (this.options.worker.enabled && this.options.worker.offscreen) {
             if (this._canvas_loaded === true)
                 this._call('process', '_update_canvas_size',  '',
                     {_height: this._data._height, _width: this._data._width});
@@ -518,9 +545,8 @@ class ParallelCoordinates {
 
         let time = performance.now();
 
-        if(this._offscreen)
+        if (this.options.worker.offscreen)
             _PCobject._redraw(true);
-
         else{
             // Grey background lines for context
             this._background = this._svg.append("g")
@@ -529,8 +555,6 @@ class ParallelCoordinates {
                 .data(this._data._line_data)
                 .enter().append("path")
                 .attr("d", this._path.bind(this));
-
-             //console.log('bg', performance.now() - time);
 
             // Foreground lines
             this._foreground = this._svg.append("g")
@@ -622,11 +646,6 @@ class ParallelCoordinates {
                 });
         }
 
-        //time = performance.now();
-        /*
-
-        console.log('fg', performance.now() - time);*/
-
         // Add a group element for each dimension
         this._g = this._svg.selectAll(".dimension")
             .data(this._data._graph_features)
@@ -637,7 +656,7 @@ class ParallelCoordinates {
                 .origin(function (d) { return {x: this._d3._x(d)}; }.bind(this))
                 .on("dragstart", function (d) {
                     this._data._dragging[d] = this._d3._x(d);
-                    if (!this._offscreen) this._background.attr("visibility", "hidden");
+                    if (!this.options.worker.offscreen) this._background.attr("visibility", "hidden");
                 }.bind(this))
                 .on("drag", function (d) {
                     this._data._dragging[d] = Math.min(this._data._width, Math.max(0, d3.event.x));
@@ -648,21 +667,21 @@ class ParallelCoordinates {
                     this._g.attr("transform", function (d) {
                         return "translate(" + this._position(d) + ")";
                     }.bind(this));
-                    if (this._offscreen) this._redraw(true);
+                    if (this.options.worker.offscreen) this._redraw(true);
                         else this._foreground.attr("d", this._path.bind(this));
                 }.bind(this))
                 .on("dragend", function (d, i) {
                     _PCobject._transition(d3.select(this))
                         .attr("transform", "translate(" + _PCobject._d3._x(d) + ")")
                         .each("end", () => {
-                            if (_PCobject._offscreen) {
+                            if (_PCobject.options.worker.offscreen) {
                                 _PCobject._observer.disconnect();
                                 delete _PCobject._data._dragging[_PCobject._observer._feature];
                                 _PCobject._redraw(false);
                             }
                         });
 
-                    if (!_PCobject._offscreen){
+                    if (!_PCobject.options.worker.offscreen){
                         delete _PCobject._data._dragging[d];
                         _PCobject._transition(_PCobject._foreground).attr("d", _PCobject._path.bind(_PCobject));
 
@@ -726,8 +745,8 @@ class ParallelCoordinates {
                 .duration(200)
                 .style("opacity", .9);
             _PCobject._tooltip.html(d)
-                .style("left", (d3.event.layerX + 20) + "px")
-                .style("top", (d3.event.layerY + _PCobject._data._margin.top * 2) + "px");
+                .style("left", (d3.event.clientX + 20) + "px")
+                .style("top", (d3.event.clientY) + "px");
         };
 
         // Add an axis and titles
@@ -820,8 +839,6 @@ class ParallelCoordinates {
             "rowCallback": (row, data) => {
                 if (this.options.draw['mode'] === "cluster")
                     $(row).children().css('background', data[data.length - 1] + "33");
-
-                $(row).children().css('white-space', 'nowrap');
             },
 
             // Redraw lines on ParCoords when table is ready
@@ -833,48 +850,49 @@ class ParallelCoordinates {
         this._fix_css_in_table('t' + this.element_id);
 
         // Add bold effect to lines when a line is hovered over in the table
-        /*$(this._datatable.table().body())
-            .on("mouseover", 'tr', function (d, i) {
-                if (_PCobject._selected_line !== -1) return;
+        if (!this.options.worker.offscreen)
+            $(this._datatable.table().body())
+                .on("mouseover", 'tr', function (d, i) {
+                    if (_PCobject._selected_line !== -1) return;
 
-                let line = _PCobject._foreground[0][_PCobject._tableToParcoords(
-                    _PCobject._datatable.row(this).data())];
-                $(line).addClass("bold");
-                d3.select(line).moveToFront();
-
-                $(_PCobject._datatable.rows().nodes()).removeClass('table-selected-line');
-                $(_PCobject._datatable.row(this).nodes()).addClass('table-selected-line');
-            })
-            .on("mouseout", 'tr', function (d) {
-                if (_PCobject._selected_line !== -1) return;
-
-                $(_PCobject._datatable.rows().nodes()).removeClass('table-selected-line');
-
-                $(_PCobject._foreground[0][
-                    _PCobject._tableToParcoords(_PCobject._datatable.row(this).data())
-                ]).removeClass("bold");
-            })
-
-            // If the line is clicked, make it 'selected'. Remove this status on one more click.
-            .on("click", 'tr', function (d, i) {
-                if (_PCobject._selected_line === -1) {
-                    _PCobject._selected_line = _PCobject._tableToParcoords(_PCobject._datatable.row(this).data());
-
-                    let line = _PCobject._foreground[0][_PCobject._selected_line];
+                    let line = _PCobject._foreground[0][_PCobject._tableToParcoords(
+                        _PCobject._datatable.row(this).data())];
                     $(line).addClass("bold");
                     d3.select(line).moveToFront();
 
-                    _PCobject._datatable.rows(this).nodes().to$().addClass('table-selected-line');
-                }
-                else if (_PCobject._selected_line === _PCobject._tableToParcoords(
-                    _PCobject._datatable.row(this).data())) {
-                        let line = _PCobject._foreground[0][_PCobject._selected_line];
-                        $(line).removeClass("bold");
+                    $(_PCobject._datatable.rows().nodes()).removeClass('table-selected-line');
+                    $(_PCobject._datatable.row(this).nodes()).addClass('table-selected-line');
+                })
+                .on("mouseout", 'tr', function (d) {
+                    if (_PCobject._selected_line !== -1) return;
 
-                        _PCobject._selected_line = -1;
-                        _PCobject._datatable.rows(this).nodes().to$().removeClass('table-selected-line');
+                    $(_PCobject._datatable.rows().nodes()).removeClass('table-selected-line');
+
+                    $(_PCobject._foreground[0][
+                        _PCobject._tableToParcoords(_PCobject._datatable.row(this).data())
+                    ]).removeClass("bold");
+                })
+
+                // If the line is clicked, make it 'selected'. Remove this status on one more click.
+                .on("click", 'tr', function (d, i) {
+                    if (_PCobject._selected_line === -1) {
+                        _PCobject._selected_line = _PCobject._tableToParcoords(_PCobject._datatable.row(this).data());
+
+                        let line = _PCobject._foreground[0][_PCobject._selected_line];
+                        $(line).addClass("bold");
+                        d3.select(line).moveToFront();
+
+                        _PCobject._datatable.rows(this).nodes().to$().addClass('table-selected-line');
                     }
-            });*/
+                    else if (_PCobject._selected_line === _PCobject._tableToParcoords(
+                        _PCobject._datatable.row(this).data())) {
+                            let line = _PCobject._foreground[0][_PCobject._selected_line];
+                            $(line).removeClass("bold");
+
+                            _PCobject._selected_line = -1;
+                            _PCobject._datatable.rows(this).nodes().to$().removeClass('table-selected-line');
+                        }
+                });
 
         // Add footer elements
         this._table.append(
@@ -1012,12 +1030,11 @@ class ParallelCoordinates {
             (this._isNumbers(x)) ?
                 [
                     x,
-                    d3.min(this._ci_cluster_data, row => (row[i] === null) ? 0 : row[i]),
-                    d3.mean(this._ci_cluster_data, row => (row[i] === null) ? 0 : row[i]),
-                    d3.max(this._ci_cluster_data, row => (row[i] === null) ? 0 : row[i]),
-                    d3.median(this._ci_cluster_data, row => (row[i] === null) ? 0 : row[i]),
-                    (this._ci_cluster_data.length > 1) ? d3.deviation(this._ci_cluster_data, row =>
-                        (row[i] === null) ? 0 : row[i]) : '-'
+                    d3.min(this._ci_cluster_values[i], val => Number(val)),
+                    d3.mean(this._ci_cluster_values[i], val => Number(val)),
+                    d3.max(this._ci_cluster_values[i], val => Number(val)),
+                    d3.median(this._ci_cluster_values[i], val => Number(val)),
+                    (this._ci_cluster_data.length > 1) ? d3.deviation(this._ci_cluster_values[i], val => Number(val)) : '-'
                 ] : [x + ((this._isStrings(x)) ? ' <i>(click to expand)</i>' : ''), '-', '-', '-', '-', '-']);
 
         // Calculate stats for string values
@@ -1132,7 +1149,7 @@ class ParallelCoordinates {
 
     // Callback to change the lines visibility after 'draw()' completed
     _on_table_ready(object) {
-        if (!object._offscreen)
+        if (!object.options.worker.offscreen)
             object._foreground.style("display", function (d, j) {
                 return object._search_results
                         .some(x => x
@@ -1237,8 +1254,8 @@ class ParallelCoordinates {
     }
 
     // Call a function in the worker
-    _call(type, name, func, data = '', callback = undefined){
-        if (window.Worker){
+    _call(type, name, func, data = '', callback = undefined) {
+        if (this.options.worker.enabled) {
             this._worker.postMessage({
                     type: type,
                     name: name,
@@ -1246,11 +1263,23 @@ class ParallelCoordinates {
                     data: data
             });
             this._worker._callback = callback;
+
+            if (this.options.worker.offscreen) {
+                this._worker._calculating = true;
+                if (this._worker._timer !== undefined) clearTimeout(this._worker._timer);
+
+                var _PCobject = this;
+
+                this._worker._timer = setTimeout(
+                    function () {
+                        if (_PCobject._worker._calculating) _PCobject._loading.style('display', 'block');
+                    }, 2000);
+            }
         }
     }
 
     _load_canvas() {
-        if (this._offscreen && this._canvas_loaded === undefined) {
+        if (this.options.worker.offscreen && this._canvas_loaded === undefined) {
             this._worker.postMessage({
                 type: 'run',
                 name: '_load_canvas_worker',
@@ -1294,15 +1323,15 @@ class ParallelCoordinates {
         );
     }
 
-
     _redraw(redraw_bg = false, redraw_fg = true) {
         //console.log('redraw', redraw_bg, redraw_fg);
+        if (!this.options.worker.enabled) return;
 
         if (this._worker._running_bg || this._worker._running_fg) {
             this._worker._fg_needs_redraw = redraw_fg || this._worker._fg_needs_redraw;
             this._worker._bg_needs_redraw = redraw_bg || this._worker._bg_needs_redraw;
         } else {
-            if (!this._offscreen) {
+            if (!this.options.worker.offscreen) {
                 return;
                 //if (redraw_fg) this._draw_foreground();
                 //if (redraw_bg) this._draw_background();
@@ -1327,17 +1356,22 @@ class ParallelCoordinates {
 
     _request_brushes(brushes) {
         //console.log('redraw', redraw_bg, redraw_fg);
-
-        if (this._worker._running_brushes) {
-            this._worker._fg_needs_brushes = true;
-            this._worker._brushes = brushes;
-        } else {
-            this._worker._running_brushes = true;
-            this._worker.postMessage({
-                type: 'process', name: '_calculate_brushes',
-                _brushes: brushes
-            });
+        if (!this.options.worker.enabled) {
+            this._data._brushes = brushes;
+            this._calculate_brushes();
+            this._datatable.draw();
         }
+        else
+            if (this._worker._running_brushes) {
+                this._worker._fg_needs_brushes = true;
+                this._worker._brushes = brushes;
+            } else {
+                this._worker._running_brushes = true;
+                this._call('process', '_calculate_brushes', '',
+                    {
+                        _brushes: brushes
+                    });
+            }
     }
 
     // *******
@@ -1414,8 +1448,9 @@ class ParallelCoordinates {
                 !skip['dims'].values.some(x => (x.includes(elem) || elem.includes(x)));
         });
 
-        // Remove all line breaks
-        data._objects = data._objects.map((row) => row.map(obj => obj.replace(/\r?\n|\r/, "")));
+        // Remove all line breaks in String variables
+        data._objects = data._objects.map((row) =>
+            row.map(obj => (typeof obj === 'string') ? obj.replace(/\r?\n|\r/, "") : obj));
 
         // Reference array with all values as strings
         data._ids = data._objects.map((row) => row.map(String));
@@ -1503,13 +1538,11 @@ class ParallelCoordinates {
         // Font desctiption
         data._font = '\'Oswald script=all rev=1\' 10px sans-serif';
 
-        (this._functions._prepare_graph.bind(this))();
-        (this._functions._prepare_d3.bind(this))();
-
-        if (this._data.hasOwnProperty('data'))
+        if (this._data.hasOwnProperty('data')) {
+            (this._functions._prepare_graph.bind(this))();
+            (this._functions._prepare_d3.bind(this))();
             this._copy = data;
-
-        //console.log('process_finished', this._data, this);
+        }   
     }
 
     _prepare_graph(){
@@ -1520,8 +1553,6 @@ class ParallelCoordinates {
                 storage._column_width * data._graph_features.length :
                 storage._column_width * 6) -
                 storage._margin.left - storage._margin.right;
-
-
 
         data._calculated_height = storage._default_height;
         data._features_strings_length = [];
@@ -1544,6 +1575,14 @@ class ParallelCoordinates {
                     data._features_strings_params.overflow_count += 1;
                 }
             }
+        });
+
+        // Array to make brushes
+        storage._line_data = storage._objects.map((x, i) => {
+            let tmp = {};
+            data._graph_features.forEach((f) => tmp[f] = (storage._features_dates.includes(f) ?
+                storage._date_values[f][i] : x[storage._features.indexOf(f)]));
+            return tmp;
         });
     }
 
@@ -1613,8 +1652,6 @@ class ParallelCoordinates {
 
     // Draw foreground canvas
     _draw_foreground() {
-        //console.log('draw call', this);
-
         let time = Date.now();
 
         let data = (this._data.hasOwnProperty('data')) ? this._data.data : this._data,
@@ -1664,15 +1701,10 @@ class ParallelCoordinates {
             };
 
         storage._ids.forEach((d, i) => draw(d, i, this._d3.foreground));
-        //console.log('draw fg ',Date.now() - time);
-        //console.log('draw finished');//, this);
-
     }
 
     // Draw background canvas
     _draw_background() {
-        //console.log('draw bg call', this);
-
         let time = Date.now();
         let data = (this._data.hasOwnProperty('data')) ? this._data.data : this._data,
             storage = (this.hasOwnProperty('_copy')) ? this._copy : data;
@@ -1709,36 +1741,30 @@ class ParallelCoordinates {
             };
 
         storage._line_data.forEach((d, i) => draw(d, i, this._d3.background));
-
-        //console.log('draw bg ',Date.now() - time);
-        //console.log('draw finished');//, this);
     }
 
     // Calculate brush filter results
     _calculate_brushes() {
-        //console.log('_calculate_brushes', this);
-
         let data = (this._data.hasOwnProperty('type')) ? this._copy : this._data,
-            brushes = this._data._brushes,
-            visible = [];
+            brushes = (this._data.hasOwnProperty('type')) ? this._data.data._brushes : this._data._brushes,
+            visible = [],
+            _self = this;
 
-        //console.log('_calculate_brushes input', this);
         if (brushes.actives.length === 0) visible = data._ids;
         else data._line_data.forEach(function (d, j) {
             let isVisible = brushes.actives.every(function (p, i) {
                 let value = null;
 
                 if (data._features_strings.includes(p))
-                    value = this._d3._ranges[p][this._d3._y[p].domain().findIndex(x => x === d[p])];
+                    value = _self._d3._ranges[p][_self._d3._y[p].domain().findIndex(x => x === d[p])];
                 else value = d[p];
-                //console.log('_calculate_brushes input', this);
+
                 return brushes.extents[i][0] <= value && value <= brushes.extents[i][1];
             });
 
             if (isVisible) visible.push(data._ids[j]);
         });
 
-        //console.log('_calculate_brushes result', visible);
         if (this._data.hasOwnProperty('type')) this._data.data = visible;
         else this._visible = visible;
     }
