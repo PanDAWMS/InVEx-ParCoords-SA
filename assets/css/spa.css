@@ -83,8 +83,15 @@ body{
 	display: none;
 	color: white;
 	height: 100%;
+	overflow: auto;
 	text-align: center;
 	flex-direction: column;
+}
+
+#after-load::after {
+	height: 1px;
+	content: ' ';
+	opacity: 0;
 }
 
 #after-load hr{
@@ -119,7 +126,7 @@ body{
 	margin-bottom: 0px;
 }
 
-#contents{
+.pc-spa-contents{
 	box-shadow:
 		0 2.8px 2.2px rgba(0, 0, 0, 0.034),
 		0 6.7px 5.3px rgba(0, 0, 0, 0.048),
@@ -132,17 +139,8 @@ body{
 	color: black;
 	margin: 0px 20px 20px 20px;
 	padding: 15px;
-	overflow: auto;
 	background: white;
 	border-radius: 5px;
 	text-align: left;
-}
 
-.pc-container .dt-button{
-	padding: revert;
-	margin-right: 5px !important;
-}
-
-.select2-container{
-	font-family: 'Lato', sans-serif;
 }
