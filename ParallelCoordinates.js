@@ -837,6 +837,11 @@ class ParallelCoordinates {
 
             // Make colors lighter for readability
             "rowCallback": (row, data) => {
+                $(row).children().each((i, el) => {
+                    el.style.minWidth =
+                        Math.min(this._getTextWidth(el.textContent, "'Lato' 14px sans-serif") * 1.5, 500) + 'px';
+                });
+
                 if (this.options.draw['mode'] === "cluster")
                     $(row).children().css('background', data[data.length - 1] + "33");
             },
