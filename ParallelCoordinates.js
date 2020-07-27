@@ -1217,6 +1217,9 @@ class ParallelCoordinates {
             return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] ||
             (typeof safari !== 'undefined' && safari.pushNotification)),
 
+            // Chrome 1 - 79
+            isChrome = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime),
+
             runner = function _worker_runner(){
                 self._isSafari = safari_test;
 
@@ -1255,6 +1258,7 @@ class ParallelCoordinates {
             workerBlobUrl = URL.createObjectURL(workerBlob);
 
         this._isSafari = isSafari;
+        this._isChrome = isChrome;
         return new Worker(workerBlobUrl);
     }
 
@@ -1269,7 +1273,7 @@ class ParallelCoordinates {
             });
             this._worker._callback = callback;
 
-            if (this.options.worker.offscreen) {
+            if (this.options.worker.offscreen && this._isChrome) {
                 this._worker._calculating = true;
                 if (this._worker._timer !== undefined) clearTimeout(this._worker._timer);
 
@@ -1519,7 +1523,7 @@ class ParallelCoordinates {
                     data._color_scheme.order = clusters_unique.sort((a, b) =>
                         data._color_scheme[b].count - data._color_scheme[a].count);
 
-                    let colorscale = d3.scale.category20();
+                    let colorscale = (clusters_unique.length <= 10) ? d3.scale.category10() : d3.scale.category20();
                     data._color_scheme.order.forEach((x, i) =>
                         data._color_scheme[x].color = colorscale(i));
                 }
