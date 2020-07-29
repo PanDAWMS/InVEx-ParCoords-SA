@@ -802,11 +802,15 @@ class ParallelCoordinates {
                 "class": "table hover"
             });
 
+        // Array with the list of columns to hide
+        let hide = (this.options.skip.hasOwnProperty('table_hide_columns')) ?
+            this.options.skip.table_hide_columns : [];
+
         // Map headers for the tables
         this._theader = this._data._features.map(row => {
             return {
                 title: row,
-
+                visible: !hide.includes(row),
                 // Add spaces and remove too much numbers after the comma
                 "render": function (data, type, full) {
                     if (type === 'display' && !isNaN(data))
@@ -826,13 +830,8 @@ class ParallelCoordinates {
             mark: true,
             dom: 'Blfrtip',
             colReorder: true,
-            stateSave: true,
             buttons: ((this.options.draw.parts_visible.table_colvis) ? ['colvis'] : []).concat(['copy', 'csv']),
             "search": {"regex": true},
-
-            columnDefs: [
-                {width: 20, targets: 0}
-            ],
             fixedColumns: true,
 
             // Make colors lighter for readability
