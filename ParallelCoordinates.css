@@ -34,8 +34,9 @@
     position: relative;
     width: auto;
     flex: 0;
-    margin-right: 20px;
     margin-bottom: 20px;
+    margin-right: auto;
+    margin-left: auto;
 }
 
 .pc-svg-container > .svg{

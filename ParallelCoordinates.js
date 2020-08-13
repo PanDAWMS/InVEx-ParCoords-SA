@@ -1497,7 +1497,10 @@ class ParallelCoordinates {
                 if (typeof color_scheme === 'undefined' ||
                     color_scheme === null ||
                     color_scheme === []) {
-                    data._color = data._values[data._features.findIndex(x => x === clusters)];
+                    data._color = data._values[data._features.findIndex(x =>
+                      data.options.skip['dims'].strict_naming ?
+                        x === clusters :
+                        x.includes(clusters))];
 
                     let clusters_unique = [...new Set(data._color)];
 
