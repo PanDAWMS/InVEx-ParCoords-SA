@@ -1,14 +1,10 @@
 {
     "presets": ["@babel/env", "@babel/react"],
-    "env": {
-        "development": {
-            "plugins": [["react-transform", {
-                "transforms": [{
-                "transform": "react-transform-hmr",
-                "imports": ["react"],
-                "locals": ["module"]
-                }]
-            }]]
-        }
-    }
+    "plugins": [["react-transform", {
+        "transforms": [{
+        "transform": "react-transform-hmr",
+        "imports": ["react"],
+        "locals": ["module"]
+        }]
+    }]]
 }

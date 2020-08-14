@@ -1,4 +1,3 @@
-const ExtractCssChunks = require('extract-css-chunks-webpack-plugin');
 var webpack = require('webpack');
 
 module.exports = {
@@ -16,7 +15,7 @@ module.exports = {
 	},
 	{
           test: /\.css$/,
-          use: { loader: 'css-loader' }
+          use: ['style-loader', 'css-loader'],
         },
 	{
           test: /\.(png|jpe?g|gif)$/,
@@ -25,7 +24,6 @@ module.exports = {
         ]
     },
     plugins: [
-	new ExtractCssChunks(),
         new webpack.HotModuleReplacementPlugin(),
 	new webpack.ProvidePlugin({
             $: "jquery",
