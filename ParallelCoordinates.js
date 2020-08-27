@@ -844,7 +844,7 @@ class ParallelCoordinates {
             colReorder: true,
             buttons: ((this.options.draw.parts_visible.table_colvis) ? ['colvis'] : []).concat(['copy', 'csv']),
             "search": {"regex": true},
-            fixedColumns: true,
+            //fixedColumns: true,
 
             // Make colors lighter for readability
             "rowCallback": (row, data) => {
