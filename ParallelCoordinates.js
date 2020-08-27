@@ -812,9 +812,21 @@ class ParallelCoordinates {
                 title: row,
                 visible: !hide.includes(row),
                 // Add spaces and remove too much numbers after the comma
-                "render": function (data, type, full) {
+                "render": function (data, type, full, config) {
                     if (type === 'display' && !isNaN(data))
                         return numberWithSpaces(parseFloat(Number(data).toFixed(2)));
+
+                    if (_PCobject._isDate(_PCobject._data._features[config.col])){
+                        let date = new Date(data);
+                        return Intl.DateTimeFormat('en-GB', {
+                            year: 'numeric',
+                            month: 'numeric',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            second: 'numeric'
+                        }).format(date);
+                    }
 
                     return data;
                 }
@@ -926,10 +938,11 @@ class ParallelCoordinates {
 
                 if (counter === 0) _PCobject._search_results = [];
 
-                if (_PCobject._visible.some(x => Object.values(x).every(y => data.includes(y)))) {
-                    _PCobject._search_results.push(data);
+                if (_PCobject._visible.some(x => Object.values(x).every(y => rowData.includes(y)))) {
+                    _PCobject._search_results.push(rowData.filter((x,i)=>(i !== rowData.length-1)));
                     return true;
                 }
+
                 return false;
             }
         );
