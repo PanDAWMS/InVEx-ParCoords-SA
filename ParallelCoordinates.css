@@ -215,7 +215,7 @@ span.pc-graph-header-text :last-of-type {
 .bold {
     stroke-width: 3;
     stroke-opacity: 1.0;
-    filter: brightness(250%);
+    filter: invert(30%) brightness(150%) drop-shadow(0px 0px 10px gray);
 }
 
 /* The tables part */
