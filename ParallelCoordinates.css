@@ -187,10 +187,11 @@ span.pc-graph-header-text :last-of-type {
     fill: none;
     stroke: #ddd;
     stroke-opacity: 0.4;
-    shape-rendering: optimizeSpeed ;
+    shape-rendering: optimizeSpeed;
 }
 
 .foreground path {
+    stroke-width: 2;
     fill: none;
 }
 
@@ -213,9 +214,9 @@ span.pc-graph-header-text :last-of-type {
 }
 
 .bold {
-    stroke-width: 3;
+    stroke-width: 4 !important;
     stroke-opacity: 1.0;
-    filter: invert(30%) brightness(150%) drop-shadow(0px 0px 10px gray);
+    filter: invert(50%) brightness(150%) drop-shadow(0px 0px 10px gray);
 }
 
 /* The tables part */
