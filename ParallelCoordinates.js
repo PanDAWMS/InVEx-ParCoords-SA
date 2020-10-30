@@ -1,9 +1,20 @@
 // Add spaces and a dot to the number
 // '1234567.1234 -> 1 234 567.12'
 function numberWithSpaces(x) {
-    let parts = x.toString().split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    return parts.join(".");
+    try{
+        let parts = (parseFloat(x).toFixed(5))
+                    .toString()//.replace(/\.0+$/,'')
+                        .split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        parts[1] = (parts[1] !== undefined) ? parts[1].replace(/([0-9]+(\.[0-9]+[1-9])?)(\.?0+$)/,'$1')
+                           .replace(/\.?0+$/,"") : '';
+        let result = (parts[1] !== '') ? parts.join(".") : parts[0];
+        return (result === "") ? '0' : result;
+    }
+    catch (e) {
+        console.warn('Exception in numberWithSpaces: ' + e.message);
+        return x;
+    }
 }
 
 // RGB color object to hex string
@@ -128,7 +139,8 @@ class ParallelCoordinates {
                     hint: true,
                     selector: true,
                     table_colvis: true
-                }
+                },
+                interpolation: 'monotone', // Possible values: 'monotone', 'linear'
             };
 
             this.options = options;
@@ -513,12 +525,15 @@ class ParallelCoordinates {
         if (this.options.worker.enabled && this.options.worker.offscreen) {
             if (this._canvas_loaded === true)
                 this._call('process', '_update_canvas_size',  '',
-                    {_height: this._data._height, _width: this._data._width});
+                    {_height: this._data._height,
+                           _width: this._data._width,
+                           options: this.options});
 
             this._call('process', '_prepare_d3', '',
                 {_graph_features: this._data._graph_features,
                        _height: this._data._height,
-                       _margin: this._data._margin});
+                       _margin: this._data._margin,
+                       options: this.options});
         }
         else{
             this._update_canvas_size();
@@ -1425,10 +1440,13 @@ class ParallelCoordinates {
 
     // Update canvas size
     _update_canvas_size() {
-        let data = (this._data.hasOwnProperty('data')) ? this._data.data : this._data;
+        let data = (this._data.hasOwnProperty('data')) ? this._data.data : this._data,
+            storage = (this.hasOwnProperty('_copy')) ? this._copy : data;
+
+        let monotone = storage.options.draw.interpolate === 'monotone';
         this._d3._line = (self._offscreen) ?
-            d3.line().curve(d3.curveMonotoneX) :
-            d3.svg.line().interpolate("monotone");
+            d3.line().curve((monotone)? d3.curveMonotoneX : d3.curveLinear) :
+            d3.svg.line().interpolate((monotone) ? "monotone" : 'linear');
 
         this._d3.foreground.canvas.height = data._height;
         this._d3.foreground.canvas.width = data._width;
@@ -1660,9 +1678,10 @@ class ParallelCoordinates {
         });
 
         // Line and axis parameters, arrays with lines (gray and colored)
+        let monotone = data.options.draw.interpolate === 'monotone';
         this._d3._line = (self._offscreen) ?
-            d3.line().curve(d3.curveMonotoneX) :
-            d3.svg.line().interpolate("monotone");
+            d3.line().curve((monotone)? d3.curveMonotoneX : d3.curveLinear) :
+            d3.svg.line().interpolate((monotone) ? "monotone" : 'linear');
         this._d3._axis = d3.svg.axis().orient("left");
 
         // Array to make brushes
