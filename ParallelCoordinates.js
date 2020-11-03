@@ -1658,6 +1658,8 @@ class ParallelCoordinates {
                     max = Math.max(...storage._values[storage._features.indexOf(dim)]),
                     domain = [min, max];
 
+                if (min === max) domain = [min*0.99, max*1.01];
+
                 // if (0 <= min && min <= 100 && 0 <= max && max <= 100) domain = [0, 100];
                 // if (0 <= min && min <= 10 && 0 <= max && max <= 10) domain = [0, 10];
                 // if (0 <= min && min <= 1 && 0 <= max && max <= 1) domain = [0, 1];
