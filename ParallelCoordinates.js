@@ -832,7 +832,8 @@ class ParallelCoordinates {
                         return numberWithSpaces(parseFloat(Number(data).toFixed(2)));
 
                     if (_PCobject._isDate(_PCobject._data._features[config.col])){
-                        let date = new Date(data);
+                        let date = new Date(data.replace(/-/g, "/").split(/\.(?=[^\.]+$)/)[0]);
+
                         return Intl.DateTimeFormat('en-GB', {
                             year: 'numeric',
                             month: 'numeric',
@@ -1500,7 +1501,9 @@ class ParallelCoordinates {
         // Arrays with numbers-only and string data parts
         data._features_numbers = data._features.filter((name, i) => data._values[i].every(x => !isNaN(x)));
         data._features_dates = data._features.filter((name, i) =>
-            !data._features_numbers.includes(name) && data._values[i].every(x => !isNaN(Date.parse(x))));
+            !data._features_numbers.includes(name) && data._values[i].every(x =>
+                !isNaN(Date.parse(x.replace(/-/g, "/").split(/\.(?=[^\.]+$)/)[0]))
+            ));
         data._features_strings = data._features.filter((name) =>
             !data._features_numbers.includes(name) && !data._features_dates.includes(name));
 
@@ -1508,7 +1511,8 @@ class ParallelCoordinates {
         data._date_values = {};
         data._features_dates.forEach(dim => {
             data._date_values[dim] =
-                data._values[data._features.indexOf(dim)].map(Date.parse);
+                data._values[data._features.indexOf(dim)].map(x =>
+                    Date.parse(x.replace(/-/g, "/").split(/\.(?=[^\.]+$)/)[0]));
         });
 
         // Coloring modes if clustering enabled
